@@ -1,8 +1,28 @@
-# JSON Explorer
+# Interactive JSON Explorer
+
+[![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/sohampatwardhan.json-explorer-viewer?style=flat-square&color=blue&label=VS%20Code%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=sohampatwardhan.json-explorer-viewer)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/sohampatwardhan.json-explorer-viewer?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=sohampatwardhan.json-explorer-viewer)
+[![Rating](https://img.shields.io/visual-studio-marketplace/r/sohampatwardhan.json-explorer-viewer?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=sohampatwardhan.json-explorer-viewer)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
 Visualize and edit any `.json` or `.jsonc` file with interactive **Tree**, **Column** (macOS Finder-style), or **Table** (Key-Value) views, right beside your VS Code editor.
 
+[**View on Visual Studio Marketplace $\rightarrow$**](https://marketplace.visualstudio.com/items?itemName=sohampatwardhan.json-explorer-viewer)
+
 ![JSON Explorer Icon](media/icon.png)
+
+## Installation
+
+### Via VS Code Extensions Marketplace
+1. Open VS Code.
+2. Open the Extensions sidebar (<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd> on macOS or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd> on Windows/Linux).
+3. Search for **Interactive JSON Explorer** (or `sohampatwardhan.json-explorer-viewer`).
+4. Click **Install**.
+
+### Via Command Line
+```bash
+code --install-extension sohampatwardhan.json-explorer-viewer
+```
 
 ## Features
 
