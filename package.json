@@ -1,5 +1,5 @@
 {
-  "name": "json-tables",
+  "name": "json-explorer-vscode",
   "displayName": "JSON Tables",
   "description": "Visualize JSON files as an interactive Tree, Column, or Key-Value/Table view, right beside the source editor.",
   "version": "0.2.0",
@@ -8,7 +8,7 @@
   "icon": "media/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sohampatwardhan/json-tables.git"
+    "url": "https://github.com/sohampatwardhan/json-explorer-vscode.git"
   },
   "engines": {
     "vscode": "^1.125.0"
