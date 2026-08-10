@@ -1,3 +1,4 @@
+import { useState } from "preact/hooks";
 import type { JsonNode } from "../shared/types.ts";
 
 function scalarText(node: JsonNode): string {
@@ -5,10 +6,13 @@ function scalarText(node: JsonNode): string {
   return String(node.value);
 }
 
-/** Renders any node's value as a table cell: a nested table for objects/arrays, scalar text otherwise. */
+/** Renders any node's value as a table cell: an expandable nested table for objects/arrays, scalar text otherwise. */
 function Cell({ node }: { node: JsonNode }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   if (node.kind === "object" || node.kind === "array") {
-    if (!node.children || node.children.length === 0) {
+    const count = node.children?.length ?? 0;
+    if (count === 0) {
       return (
         <span class="table-view__empty" data-kind={node.kind}>
           {node.kind === "array" ? "[]" : "{}"}
@@ -17,7 +21,21 @@ function Cell({ node }: { node: JsonNode }) {
     }
     return (
       <div class="table-view__nested">
-        <TableView node={node} />
+        <button
+          type="button"
+          class="table-view__toggle"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          title={isCollapsed ? "Expand nested table" : "Collapse nested table"}
+          aria-expanded={!isCollapsed}
+        >
+          <span class={`table-view__chevron ${isCollapsed ? "" : "table-view__chevron--expanded"}`}>
+            {"›"}
+          </span>
+          <span class="table-view__badge" data-kind={node.kind}>
+            {node.kind === "array" ? `[${count}]` : `{${count}}`}
+          </span>
+        </button>
+        {!isCollapsed && <TableView node={node} />}
       </div>
     );
   }
