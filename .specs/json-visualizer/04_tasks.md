@@ -88,7 +88,7 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       `jsdom`'s missing type declarations — a second `dependency-security-audit change` pre/post
       pair covers this addition specifically, project revision `54616684e22d300cb80cfce04a48d24b5d3a97aa`).
     - Confirm during setup that esbuild's default CSS-import bundling emits a sibling
-      `dist/webview/main.css` alongside [`dist/webview/main.js`](../../dist/webview/main.js) when [`src/webview/main.tsx`](../../src/webview/main.tsx)
+      [`dist/webview/main.css`](../../dist/webview/main.css) alongside [`dist/webview/main.js`](../../dist/webview/main.js) when [`src/webview/main.tsx`](../../src/webview/main.tsx)
       imports `theme.css` (task 5.2) — task 4.1's webview HTML generation links this output.
     - Also add `license: "MIT"` and `icon: "media/icon.png"` to [`package.json`](../../package.json) now, since this
       task is the file's sole owner across the plan — task 6.2 creates the referenced `LICENSE`
@@ -368,7 +368,7 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       'nonce-<nonce>'; style-src 'nonce-<nonce>'`) — confirm this exact pattern against
       [`03_design.md`](03_design.md#current-technology-evidence) before writing it.
     - The generated HTML must convert both [`dist/webview/main.js`](../../dist/webview/main.js) and its sibling
-      `dist/webview/main.css` (esbuild's default output for `main.tsx`'s `theme.css` import, per
+      [`dist/webview/main.css`](../../dist/webview/main.css) (esbuild's default output for `main.tsx`'s `theme.css` import, per
       task 1.1) through `panel.webview.asWebviewUri(Uri.joinPath(context.extensionUri, "dist",
       "webview", ...))` — `localResourceRoots` only whitelists the directory, it does not itself
       rewrite paths — and reference the CSS via a nonce-carrying `<link rel="stylesheet"
@@ -376,10 +376,14 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       'none'`, any stylesheet not wired in this way is silently dropped, breaking the
       theme-driven coloring properties (found by `plan-harden`'s preflight review).
     - `sendInit` calls `buildViewModel`, reads `context.globalState.get("jsonTables.lastViewMode",
-      "tree")`, and posts `{ type: "init", viewModel, viewMode }`.
+      "tree")`, and posts `{ type: "init", viewModel, viewMode }` — called only from
+      `onWebviewMessage` on `{ type: "ready" }`, never eagerly from `createOrReveal` itself, since
+      `panel.webview.html` assignment triggers an async page load and a message posted before
+      then could arrive before task 5.2's `main.tsx` has attached its listener.
     - `onDocumentChanged` (wired through task 2.2's `watchDocument`) rebuilds via
       `buildViewModel` and posts `{ type: "update", viewModel }`.
-    - `onWebviewMessage` handles `{ type: "viewModeChanged", viewMode }` by writing
+    - `onWebviewMessage` handles `{ type: "ready" }` by calling `sendInit()`, and
+      `{ type: "viewModeChanged", viewMode }` by writing
       `context.globalState.update("jsonTables.lastViewMode", viewMode)`.
     - `dispose()` — called from the panel's own `onDidDispose` and from `watchDocument`'s
       `onClose` — disposes the watcher subscription and removes the map entry.
@@ -447,15 +451,15 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Delegation:** parallel-safe
     - _Requirements: 2.3, 3.5, 3.6, 6.1, 6.3, 8.3, 8.5, 9.1_
 
-- [ ] 5. Wiring
-  - [ ] 5.1 Implement the command handler and extension activation
-    - Create `src/commandHandler.ts` exporting `registerVisualizeCommand(context):
+- [x] 5. Wiring
+  - [x] 5.1 Implement the command handler and extension activation
+    - Create [`src/commandHandler.ts`](../../src/commandHandler.ts) exporting `registerVisualizeCommand(context):
       vscode.Disposable`, registering `jsonTables.visualize` (id from task 1.1's manifest entry);
       on invocation, reads `vscode.window.activeTextEditor?.document` and, if present, calls
       `PanelController.createOrReveal(context, document)`.
     - Create [`src/extension.ts`](../../src/extension.ts) exporting `activate(context)`, calling
       `context.subscriptions.push(registerVisualizeCommand(context))`.
-    - **Files:** `src/commandHandler.ts`, [`src/extension.ts`](../../src/extension.ts)
+    - **Files:** [`src/commandHandler.ts`](../../src/commandHandler.ts), [`src/extension.ts`](../../src/extension.ts)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 4.1
@@ -465,19 +469,29 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       [`package.json`](../../package.json) `main` entry point's exported activation function
     - **Documentation:** doc comment on `activate` and `registerVisualizeCommand` stating the
       activation contract (idempotent registration, no-op when there is no active editor)
-    - **Verification:** Extension Development Host manual check — command runs from both the
-      editor-title button and the Command Palette and opens the panel in both cases
+    - **Verification:** `npx tsc --noEmit`, `npm run compile`, and `npm test` (32 tests) all exit
+      0; confirmed `jsonTables.visualize` appears in the built [`dist/extension.js`](../../dist/extension.js). The Extension
+      Development Host manual check (command runs from the editor-title button and the Command
+      Palette, opens the panel in both cases) requires a live VS Code GUI the execution
+      environment doesn't have — deferred to task 6.2's human walkthrough, which already covers
+      it.
     - **Estimated effort:** 45-60 minutes
     - **Risk:** low
     - **Task category:** quick_lookup
     - **Delegation:** parallel-safe
     - _Requirements: 1.3, 10.2_
 
-  - [ ] 5.2 Implement the webview entry point
-    - Create [`src/webview/main.tsx`](../../src/webview/main.tsx): calls `acquireVsCodeApi()`, imports `theme.css`, attaches
-      `window.addEventListener("message", ...)` before mount so no early `init` message is
-      missed, calls Preact's `render(<App/>, document.body)`, then posts `{ type: "ready" }`.
-    - **Files:** [`src/webview/main.tsx`](../../src/webview/main.tsx)
+  - [x] 5.2 Implement the webview entry point
+    - Create [`src/webview/main.tsx`](../../src/webview/main.tsx): calls `acquireVsCodeApi()`,
+      imports `theme.css` (a side-effect import — needs `declare module "*.css"` in a small
+      `css.d.ts` ambient declaration for `tsc` to accept it; esbuild already bundles it into a
+      sibling [`dist/webview/main.css`](../../dist/webview/main.css), confirmed by inspecting the actual build output), calls
+      Preact's `render(<App postMessage={...}/>, document.body)`, then posts
+      `{ type: "ready" }`. `App` (not `main.tsx`) owns the `window.addEventListener("message",
+      ...)` listener via its own `useEffect`; task 4.1's `PanelController` now waits for this
+      `ready` message before ever sending `init` (a design correction — see 4.1's updated
+      `onWebviewMessage`), so there's no early-message race to guard against here.
+    - **Files:** [`src/webview/main.tsx`](../../src/webview/main.tsx), [`src/webview/css.d.ts`](../../src/webview/css.d.ts)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 4.2
@@ -485,10 +499,13 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Interfaces:** Consumes: `App` component from 4.2, `acquireVsCodeApi()` (VS Code webview
       API); Produces: the [`dist/webview/main.js`](../../dist/webview/main.js) bundle entry point task 4.1's `panelController.ts`
       HTML references
-    - **Documentation:** doc comment stating why the message listener attaches before `render`
-      (so a fast `init` message from the host is never dropped)
-    - **Verification:** Extension Development Host manual check — panel shows the Tree view (or
-      the last-used mode) immediately on open, with no visible flash of empty content
+    - **Documentation:** doc comment stating the `ready`-before-`init` ordering guarantee and why
+      `App` (not this file) owns the message listener
+    - **Verification:** `npx tsc --noEmit`, `npm run compile` (confirmed [`dist/webview/main.js`](../../dist/webview/main.js)
+      and [`dist/webview/main.css`](../../dist/webview/main.css) both contain the expected content), and `npm test` (33 tests)
+      all exit 0. The Extension Development Host manual check (panel shows the Tree view, or the
+      last-used mode, immediately on open) requires a live VS Code GUI the execution environment
+      doesn't have — deferred to task 6.2's human walkthrough.
     - **Estimated effort:** 30-45 minutes
     - **Risk:** low
     - **Task category:** quick_lookup

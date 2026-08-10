@@ -105,26 +105,34 @@ have to live where that import never happens.
 
 - `debounce.ts`: `debounce<Args>(fn, ms): (...args: Args) => void` — the standard trailing-edge
   debounce, generic over its wrapped function's arguments.
-- `webviewHtml.ts`: `generateNonce(): string` and `renderWebviewHtml({ scriptUri, styleUri,
-  nonce }): string`, producing the CSP `default-src 'none'; script-src 'nonce-<nonce>';
-  style-src 'nonce-<nonce>'` shell with both the nonce'd `<script>` and `<link>` tags.
+- `webviewHtml.ts`: `generateNonce(): string` (16 bytes from `node:crypto`'s `randomBytes`,
+  base64-encoded — a background security review of the first draft, which used `Math.random()`,
+  flagged it as a weak primitive; `randomBytes` costs nothing extra and removes the ambiguity)
+  and `renderWebviewHtml({ scriptUri, styleUri, nonce }): string`, producing the CSP
+  `default-src 'none'; script-src 'nonce-<nonce>'; style-src 'nonce-<nonce>'` shell with both the
+  nonce'd `<script>` and `<link>` tags.
 
 - `class PanelController` — one instance per visualized `vscode.TextDocument`, keyed by
   `document.uri.toString()` in a module-level `Map` so a second invocation on the same document
   reveals the existing panel instead of creating a duplicate.
   - `static createOrReveal(context, document): void` — looks up or creates a
     `vscode.WebviewPanel` (`enableScripts: true`, `retainContextWhenHidden: true`,
-    `localResourceRoots: [Uri.joinPath(context.extensionUri, "dist", "webview")]`), sets its HTML
-    (CSP `default-src 'none'; script-src 'nonce-<nonce>'; style-src 'nonce-<nonce>'`), and calls
-    `sendInit`. **R1.3, R1.4**: the panel opens in `ViewColumn.Beside`, never replacing the
-    source editor.
+    `localResourceRoots: [Uri.joinPath(context.extensionUri, "dist", "webview")]`) and sets its
+    HTML (CSP `default-src 'none'; script-src 'nonce-<nonce>'; style-src 'nonce-<nonce>'`). It
+    does **not** call `sendInit` itself — assigning `panel.webview.html` triggers an async page
+    load, so a message posted immediately could arrive before `main.tsx` has attached its
+    listener. **R1.3, R1.4**: the panel opens in `ViewColumn.Beside`, never replacing the source
+    editor.
   - `private sendInit(): void` — builds the initial view model, reads
     `context.globalState.get("jsonTables.lastViewMode", "tree")`, and posts
-    `{ type: "init", viewModel, viewMode }`. **R2.1, R6.2, R6.3**.
+    `{ type: "init", viewModel, viewMode }`. Called only from `onWebviewMessage` in response to
+    the webview's own `{ type: "ready" }`, making the handshake deterministic instead of relying
+    on message-delivery timing. **R2.1, R6.2, R6.3**.
   - `private onDocumentChanged(event): void` — subscribed via `documentWatcher.ts`; debounces
     (150 ms) then rebuilds and posts `{ type: "update", viewModel }`. **R8.2, R8.3**.
-  - `private onWebviewMessage(message): void` — handles `{ type: "viewModeChanged", viewMode }`
-    by writing `context.globalState.update("jsonTables.lastViewMode", viewMode)`. **R6.3**.
+  - `private onWebviewMessage(message): void` — handles `{ type: "ready" }` by calling
+    `sendInit()`, and `{ type: "viewModeChanged", viewMode }` by writing
+    `context.globalState.update("jsonTables.lastViewMode", viewMode)`. **R6.2, R6.3**.
   - `dispose(): void` — called from the panel's own `onDidDispose` and from the document watcher
     when the visualized document closes; disposes the change-listener subscription and removes
     the instance from the `Map`. **R8.4**.
@@ -257,6 +265,8 @@ sequenceDiagram
     participant Webview
     User->>CommandHandler: click "Visualize JSON"
     CommandHandler->>PanelController: createOrReveal(document)
+    PanelController->>Webview: set webview.html (async page load)
+    Webview->>PanelController: postMessage(ready)
     PanelController->>ViewModelBuilder: parse(text)
     ViewModelBuilder-->>PanelController: viewModel
     PanelController->>GlobalState: get lastViewMode

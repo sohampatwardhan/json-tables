@@ -1,11 +1,13 @@
-/** 32 hex characters, sufficient entropy for a per-load CSP nonce (not a security token beyond that). */
+import { randomBytes } from "node:crypto";
+
+/**
+ * A per-load CSP nonce, from `crypto.randomBytes` rather than `Math.random()` — `Math.random`'s
+ * output is predictable enough to make a poor nonce source even though this webview's CSP
+ * mainly guards content this extension already controls, not third-party network content;
+ * `randomBytes` costs nothing extra and removes the ambiguity entirely.
+ */
 export function generateNonce(): string {
-  let nonce = "";
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (let i = 0; i < 32; i++) {
-    nonce += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return nonce;
+  return randomBytes(16).toString("base64");
 }
 
 /**

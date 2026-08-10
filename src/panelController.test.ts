@@ -1,7 +1,15 @@
 import { test, mock } from "node:test";
 import assert from "node:assert/strict";
 import { debounce } from "./debounce.ts";
-import { renderWebviewHtml } from "./webviewHtml.ts";
+import { generateNonce, renderWebviewHtml } from "./webviewHtml.ts";
+
+test("generateNonce produces a non-empty, attribute-safe value that differs across calls", () => {
+  const first = generateNonce();
+  const second = generateNonce();
+  assert.ok(first.length > 0);
+  assert.notEqual(first, second, "each nonce must be freshly random, not a fixed value");
+  assert.ok(!first.includes('"') && !first.includes("'"), "must be safe inside a quoted HTML attribute");
+});
 
 test("debounce collapses a burst of calls into exactly one trailing invocation", () => {
   mock.timers.enable({ apis: ["setTimeout"] });

@@ -13,6 +13,8 @@
   "steps": [
     { "type": "message", "from": "User", "to": "CommandHandler", "label": "click \"Visualize JSON\"", "kind": "sync" },
     { "type": "message", "from": "CommandHandler", "to": "PanelController", "label": "createOrReveal(document)", "kind": "sync" },
+    { "type": "message", "from": "PanelController", "to": "Webview", "label": "set webview.html (async page load)", "kind": "sync" },
+    { "type": "message", "from": "Webview", "to": "PanelController", "label": "postMessage(ready)", "kind": "sync" },
     { "type": "message", "from": "PanelController", "to": "ViewModelBuilder", "label": "parse(text)", "kind": "sync" },
     { "type": "message", "from": "ViewModelBuilder", "to": "PanelController", "label": "viewModel", "kind": "reply" },
     { "type": "message", "from": "PanelController", "to": "GlobalState", "label": "get lastViewMode", "kind": "sync" },

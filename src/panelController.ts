@@ -72,7 +72,11 @@ export class PanelController {
 
     const controller = new PanelController(context, document, panel);
     PanelController.instances.set(key, controller);
-    controller.sendInit();
+    // sendInit() is deliberately NOT called here: the webview's script has not loaded yet
+    // (assigning `panel.webview.html` triggers an async page load), so a message posted this
+    // early could arrive before `main.tsx` has attached its listener. Waiting for the webview's
+    // own `ready` message (below) makes the handshake deterministic instead of relying on
+    // message-delivery timing.
   }
 
   private sendInit(): void {
@@ -87,7 +91,9 @@ export class PanelController {
   }
 
   private onWebviewMessage(message: WebviewMessage): void {
-    if (message.type === "viewModeChanged") {
+    if (message.type === "ready") {
+      this.sendInit();
+    } else if (message.type === "viewModeChanged") {
       void this.context.globalState.update(LAST_VIEW_MODE_KEY, message.viewMode);
     }
   }

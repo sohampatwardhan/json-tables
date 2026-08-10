@@ -1,3 +1,7 @@
-// Placeholder activation entry point, scaffolded by task 1.1 to prove the esbuild pipeline
-// produces `dist/extension.js`. Replaced with the real command registration in task 5.1.
-export function activate(): void {}
+import * as vscode from "vscode";
+import { registerVisualizeCommand } from "./commandHandler.ts";
+
+/** Extension entry point (`package.json`'s `main`). Registers every disposable command/listener. */
+export function activate(context: vscode.ExtensionContext): void {
+  context.subscriptions.push(registerVisualizeCommand(context));
+}

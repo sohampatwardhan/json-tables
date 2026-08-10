@@ -21,7 +21,7 @@
 
 | Task | Stage | Mode | Branch / worktree | State |
 |---|---:|---|---|---|
-| 1.1 | 1 | sequential | `feature/json-visualizer` (main worktree) | dispatched |
+| 6.1, 6.2 | 6 | sequential | `feature/json-visualizer` (main worktree) | ready — Stages 1-5 integrated, checkpoint reached |
 
 ## Baseline
 
@@ -51,6 +51,8 @@
 | run-20260810T124656Z | Stage 3 | 3.5 | 2 | 2026-08-10T12:46:56Z | 2026-08-10T12:47:29Z | 33 | verified |
 | run-20260810T124656Z | Stage 4 | 4.1 | 1 | 2026-08-10T12:53:16Z | 2026-08-10T12:56:52Z | 216 | verified |
 | run-20260810T124656Z | Stage 4 | 4.2 | 1 | 2026-08-10T12:57:21Z | 2026-08-10T12:59:53Z | 152 | verified |
+| run-20260810T124656Z | Stage 5 | 5.1 | 1 | 2026-08-10T13:02:11Z | 2026-08-10T13:03:15Z | 64 | verified |
+| run-20260810T124656Z | Stage 5 | 5.2 | 1 | 2026-08-10T13:03:15Z | 2026-08-10T13:09:51Z | 396 | verified |
 
 ### Execution Gantt
 
@@ -72,6 +74,9 @@ gantt
     section Stage 4
     4.1 attempt 1 (verified, 216s) :done, b_4_1_attempt1, 2026-08-10T12:53:16, 2026-08-10T12:56:52
     4.2 attempt 1 (verified, 152s) :done, b_4_2_attempt1, 2026-08-10T12:57:21, 2026-08-10T12:59:53
+    section Stage 5
+    5.1 attempt 1 (verified, 64s) :done, b_5_1_attempt1, 2026-08-10T13:02:11, 2026-08-10T13:03:15
+    5.2 attempt 1 (verified, 396s) :done, b_5_2_attempt1, 2026-08-10T13:03:15, 2026-08-10T13:09:51
 ```
 
 Run `run-20260810T034356Z` and task 3.5's first attempt were left open across a session pause
@@ -103,6 +108,21 @@ between roughly 04:29 and 12:46 UTC; both are recorded `interrupted` with unknow
   citations changed), navigation regenerated, and `spec-check.py --ready` re-run clean (35
   requirements traced, 14 tasks, 6 stages, `ready: ["1.1"]`). Discovery/Requirements/Design/Tasks
   gates retained as `approved` in [`00_state.md`](00_state.md).
+
+- A background commit-security review of task 4.1's commit flagged `webviewHtml.ts`'s
+  `generateNonce` as a weak cryptographic primitive (`Math.random()`, which matches VS Code's own
+  official extension-sample nonce helper but is still not cryptographically unpredictable).
+  Switched to `node:crypto`'s `randomBytes(16)`, base64-encoded; added a unit test asserting two
+  calls differ and the result is attribute-safe. Applied during task 5.1/5.2's timing window
+  (recorded under 5.2's attempt above) since it touches `webviewHtml.ts` from task 4.1, already
+  integrated; re-verified all 33 tests, `tsc --noEmit`, and `npm run compile` after the change.
+  While investigating the same file, corrected a real design gap found by re-reading the flow:
+  `PanelController` was calling `sendInit()` eagerly from `createOrReveal` before the webview's
+  script could possibly have loaded, rather than waiting for the webview's own `{ type: "ready" }`
+  message as [`03_design.md`](03_design.md)'s edge-case notes already specified elsewhere. Removed the eager call
+  and wired `sendInit` to fire only from `onWebviewMessage`'s `"ready"` handler, updated
+  [`03_design.md`](03_design.md)/[`04_tasks.md`](04_tasks.md)/[`diagrams/flows.json`](diagrams/flows.json)'s sequence diagram to match, and
+  render-validated the regenerated diagram.
 
 ## Integration Decision
 

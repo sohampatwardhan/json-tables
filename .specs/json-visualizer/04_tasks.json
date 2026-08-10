@@ -1,22 +1,22 @@
 {
   "concurrency": {
-    "active_stage": 5,
+    "active_stage": 6,
     "blocked": {},
     "parallel_candidates": [
-      "5.1",
-      "5.2"
+      "6.1",
+      "6.2"
     ],
     "ready": [
-      "5.1",
-      "5.2"
+      "6.1",
+      "6.2"
     ],
     "serial_candidates": [],
     "waves": [
       {
         "mode": "parallel",
         "tasks": [
-          "5.1",
-          "5.2"
+          "6.1",
+          "6.2"
         ],
         "wave": 1
       }
@@ -24,7 +24,7 @@
   },
   "generated_from": {
     "file": "04_tasks.md",
-    "sha256": "0fd00d420bb4b3d90a06cd21d12dbb0418aafa65b19e5f538b83fa495589ced2"
+    "sha256": "c48247473b0958c82155c799d807e907de508c2cf8486013d6ac6fa17c33b45c"
   },
   "requirement_count": 35,
   "schema_version": 1,
@@ -363,7 +363,7 @@
     },
     {
       "capability_tier": "economical",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -387,11 +387,11 @@
       "stage": 5,
       "task_category": "quick_lookup",
       "title": "Implement the command handler and extension activation",
-      "verification": "Extension Development Host manual check \u2014 command runs from both the editor-title button and the Command Palette and opens the panel in both cases"
+      "verification": "`npx tsc --noEmit`, `npm run compile`, and `npm test` (32 tests) all exit 0; confirmed `jsonTables.visualize` appears in the built [`dist/extension.js`](../../dist/extension.js). The Extension Development Host manual check (command runs from the editor-title button and the Command Palette, opens the panel in both cases) requires a live VS Code GUI the execution environment doesn't have \u2014 deferred to task 6.2's human walkthrough, which already covers it."
     },
     {
       "capability_tier": "economical",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -399,7 +399,8 @@
         "4.2"
       ],
       "files": [
-        "src/webview/main.tsx"
+        "src/webview/main.tsx",
+        "src/webview/css.d.ts"
       ],
       "id": "5.2",
       "interfaces": "Consumes: `App` component from 4.2, `acquireVsCodeApi()` (VS Code webview API); Produces: the [`dist/webview/main.js`](../../dist/webview/main.js) bundle entry point task 4.1's `panelController.ts` HTML references",
@@ -413,7 +414,7 @@
       "stage": 5,
       "task_category": "quick_lookup",
       "title": "Implement the webview entry point",
-      "verification": "Extension Development Host manual check \u2014 panel shows the Tree view (or the last-used mode) immediately on open, with no visible flash of empty content"
+      "verification": "`npx tsc --noEmit`, `npm run compile` (confirmed [`dist/webview/main.js`](../../dist/webview/main.js) and [`dist/webview/main.css`](../../dist/webview/main.css) both contain the expected content), and `npm test` (33 tests) all exit 0. The Extension Development Host manual check (panel shows the Tree view, or the last-used mode, immediately on open) requires a live VS Code GUI the execution environment doesn't have \u2014 deferred to task 6.2's human walkthrough."
     },
     {
       "capability_tier": "frontier",
