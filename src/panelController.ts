@@ -1,3 +1,4 @@
+import * as path from "node:path";
 import * as vscode from "vscode";
 import { buildViewModel } from "./viewModelBuilder.ts";
 import { watchDocument } from "./documentWatcher.ts";
@@ -10,9 +11,9 @@ const LAST_VIEW_MODE_KEY = "jsonTables.lastViewMode";
 const DEBOUNCE_MS = 150;
 
 /**
- * Owns one Webview panel per visualized document. Applies document edits requested from the
- * webview (value editing & key renaming) via VS Code WorkspaceEdit so that Undo/Redo is
- * fully preserved in the active editor.
+ * Owns one Webview panel per visualized document. Opens the visualizer in a new tab in the active
+ * editor group, and applies document edits requested from the webview (value editing & key renaming)
+ * via VS Code WorkspaceEdit so that Undo/Redo is fully preserved in the active editor.
  */
 export class PanelController {
   private static readonly instances = new Map<string, PanelController>();
@@ -38,25 +39,28 @@ export class PanelController {
     panel.webview.onDidReceiveMessage((message: WebviewMessage) => this.onWebviewMessage(message));
   }
 
-  /** Reveals the existing panel for `document` if one is open, otherwise creates a new one. */
+  /** Reveals the existing panel for `document` if one is open, otherwise creates a new tab. */
   static createOrReveal(context: vscode.ExtensionContext, document: vscode.TextDocument): void {
     const key = document.uri.toString();
     const existing = PanelController.instances.get(key);
     if (existing) {
-      existing.panel.reveal(vscode.ViewColumn.Beside);
+      existing.panel.reveal(vscode.ViewColumn.Active);
       return;
     }
 
+    const fileName = document.fileName ? path.basename(document.fileName) : "JSON Tables";
     const panel = vscode.window.createWebviewPanel(
       "jsonTables.visualizer",
-      "JSON Tables",
-      vscode.ViewColumn.Beside,
+      `JSON: ${fileName}`,
+      vscode.ViewColumn.Active,
       {
         enableScripts: true,
         retainContextWhenHidden: true,
         localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, "dist", "webview")],
       },
     );
+
+    panel.iconPath = vscode.Uri.joinPath(context.extensionUri, "media", "icon.png");
 
     const nonce = generateNonce();
     const scriptUri = panel.webview.asWebviewUri(
