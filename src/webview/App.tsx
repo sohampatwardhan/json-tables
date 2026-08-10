@@ -1,4 +1,4 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 import { TreeNode, defaultExpandedPaths, collectExpandablePaths } from "./TreeView.tsx";
 import { ColumnView } from "./ColumnView.tsx";
 import { TableView } from "./TableView.tsx";
@@ -23,7 +23,7 @@ export function App({ postMessage }: AppProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("tree");
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
   const [selectedPath, setSelectedPath] = useState<string[]>([]);
-  const [showTableBadges, setShowTableBadges] = useState(true);
+  const [showTableBadges, setShowTableBadges] = useState(false);
 
   useEffect(() => {
     function onMessage(event: MessageEvent<HostMessage>) {
@@ -41,6 +41,15 @@ export function App({ postMessage }: AppProps) {
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, []);
+
+  const allExpandablePaths = useMemo(() => {
+    if (viewModel.status !== "ok") return [];
+    return collectExpandablePaths(viewModel.root);
+  }, [viewModel]);
+
+  const isFullyExpanded =
+    allExpandablePaths.length > 0 &&
+    allExpandablePaths.every((path) => expandedPaths.has(path));
 
   function handleViewModeChange(mode: ViewMode) {
     setViewMode(mode);
@@ -107,7 +116,7 @@ export function App({ postMessage }: AppProps) {
             <button type="button" onClick={handleCollapseAll}>
               Collapse all
             </button>
-            {viewMode === "table" && (
+            {viewMode === "table" && isFullyExpanded && (
               <button
                 type="button"
                 onClick={() => setShowTableBadges(!showTableBadges)}

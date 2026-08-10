@@ -5,6 +5,12 @@ All notable changes to the **JSON Tables** extension will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2026-08-10
+
+### Changed
+- **Default Hidden Badges**: Key-Value tables now hide per-table chevron count badges by default when fully expanded, providing a completely clean and seamless nested table appearance.
+- **Contextual Badges Toggle**: The toolbar button to show/hide badges is now visible only when the Table view is in its fully expanded state, and automatically hidden in collapsed or partially collapsed states.
+
 ## [0.1.5] - 2026-08-10
 
 ### Changed

@@ -139,33 +139,46 @@ test("renaming a key emits a renameKey message to postMessage", () => {
   cleanup();
 });
 
-test("table view toolbar provides Expand all, Collapse all, and Show/Hide badges buttons", () => {
+test("table view hides badges by default and only shows the badges toggle when fully expanded", () => {
   const { container } = render(<App postMessage={mock.fn()} />);
   sendHostMessage({ type: "init", viewMode: "table", viewModel: { status: "ok", root: sampleTree } });
 
+  // On initial load, tables are fully expanded and badges are hidden
+  assert.equal(container.querySelector(".table-view__toggle"), null, "badges are hidden by default");
+  const showBadgesBtn = Array.from(container.querySelectorAll("button")).find(
+    (el) => el.textContent === "Show badges",
+  );
+  assert.ok(showBadgesBtn, "Show badges button present when fully expanded");
+
+  // Clicking Show badges displays badges
+  fireEvent.click(showBadgesBtn as Element);
+  assert.ok(container.querySelector(".table-view__toggle"), "badges are now shown");
+
+  // Clicking Collapse all collapses tables and hides the Show/Hide badges toggle
   const collapseAll = Array.from(container.querySelectorAll("button")).find(
     (el) => el.textContent === "Collapse all",
   );
-  assert.ok(collapseAll, "Collapse all button present in Table view");
+  assert.ok(collapseAll);
   fireEvent.click(collapseAll as Element);
   assert.equal(container.querySelectorAll(".table-view__nested table").length, 0, "all nested tables collapsed");
+  assert.equal(
+    Array.from(container.querySelectorAll("button")).find((el) => el.textContent?.includes("badges")),
+    undefined,
+    "Show/Hide badges button is hidden in collapsed view",
+  );
 
+  // Clicking Expand all expands tables and restores the Show/Hide badges toggle
   const expandAll = Array.from(container.querySelectorAll("button")).find(
     (el) => el.textContent === "Expand all",
   );
-  assert.ok(expandAll, "Expand all button present in Table view");
+  assert.ok(expandAll);
   fireEvent.click(expandAll as Element);
   assert.ok(container.querySelectorAll(".table-view__nested table").length > 0, "nested tables expanded");
-
-  const hideBadges = Array.from(container.querySelectorAll("button")).find(
-    (el) => el.textContent === "Hide badges",
-  );
-  assert.ok(hideBadges, "Hide badges button present in Table view");
-  fireEvent.click(hideBadges as Element);
-  assert.equal(container.querySelector(".table-view__toggle"), null, "badges are hidden");
   assert.ok(
-    Array.from(container.querySelectorAll("button")).some((el) => el.textContent === "Show badges"),
+    Array.from(container.querySelectorAll("button")).some((el) => el.textContent?.includes("badges")),
+    "Show/Hide badges button is visible again when fully expanded",
   );
   cleanup();
 });
+
 
