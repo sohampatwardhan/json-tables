@@ -5,6 +5,11 @@ All notable changes to the **JSON Tables** extension will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-08-10
+
+### Changed
+- **Natural Table Widths**: Nested tables and key-value cells now fit their content dimensions naturally (`width: fit-content; max-width: 100%`) instead of forcibly stretching across the entire window width, eliminating excessive empty whitespace.
+
 ## [0.1.3] - 2026-08-10
 
 ### Changed

@@ -350,7 +350,8 @@ button {
 }
 
 .kv-container {
-  width: 100%;
+  width: fit-content;
+  min-width: 100%;
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -365,7 +366,7 @@ button {
 }
 
 .kv-key {
-  width: clamp(100px, 18%, 180px);
+  width: clamp(100px, 14%, 200px);
   min-width: 100px;
   max-width: 220px;
   flex-shrink: 0;
@@ -384,12 +385,11 @@ button {
 .kv-value {
   flex: 1;
   min-width: 0;
-  width: 100%;
   padding: 8px 12px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  align-items: stretch;
+  align-items: flex-start;
   overflow-x: auto;
   box-sizing: border-box;
   overflow-wrap: anywhere;
@@ -406,10 +406,10 @@ button {
   max-width: 100%;
 }
 
-/* Nested tables — Expand dynamically to available pane width */
+/* Nested tables — Fit content width naturally instead of stretching across screen */
 .table-view__nested {
   margin: 0;
-  width: 100%;
+  width: fit-content;
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -452,7 +452,7 @@ button {
 .table-view__nested-table {
   border-collapse: collapse;
   font-size: 12px;
-  width: 100%;
+  width: fit-content;
   max-width: 100%;
   table-layout: auto;
   margin-top: 2px;
@@ -468,8 +468,9 @@ button {
   vertical-align: top;
   background: var(--vscode-sideBar-background, rgba(128, 128, 128, 0.09));
   color: var(--vscode-foreground);
-  width: clamp(80px, 18%, 150px);
-  max-width: 160px;
+  width: auto;
+  min-width: 70px;
+  max-width: 220px;
   word-break: break-word;
   box-sizing: border-box;
 }
@@ -482,12 +483,14 @@ button {
   word-break: break-word;
   overflow-wrap: anywhere;
   box-sizing: border-box;
+  width: auto;
+  max-width: 100%;
 }
 
 /* Array Grid (Table mode for arrays of objects) */
 .table-view__grid {
   border-collapse: collapse;
-  width: 100%;
+  width: fit-content;
   max-width: 100%;
   font-size: 12px;
   border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
