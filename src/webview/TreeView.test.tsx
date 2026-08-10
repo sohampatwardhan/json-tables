@@ -27,11 +27,11 @@ const sampleTree: JsonNode = {
   ],
 };
 
-test("defaultExpandedPaths includes every object/array node at depth < 2", () => {
+test("defaultExpandedPaths includes every object/array node for fully expanded initial view", () => {
   const expanded = defaultExpandedPaths(sampleTree);
   assert.ok(expanded.has(pathKey([])), "root (depth 0) is expanded by default");
   assert.ok(expanded.has(pathKey(["a"])), "depth-1 node is expanded by default");
-  assert.ok(!expanded.has(pathKey(["a", "b"])), "depth-2 node is collapsed by default");
+  assert.ok(expanded.has(pathKey(["a", "b"])), "depth-2 nested node is expanded by default");
 });
 
 test("renders a chevron and child-count badge for object/array nodes", () => {

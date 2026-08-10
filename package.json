@@ -2,7 +2,7 @@
   "name": "json-tables",
   "displayName": "JSON Tables",
   "description": "Visualize JSON files as an interactive Tree, Column, or Key-Value/Table view, right beside the source editor.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "license": "MIT",
   "icon": "media/icon.png",

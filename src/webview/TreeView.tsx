@@ -16,20 +16,11 @@ export function collectExpandablePaths(node: JsonNode, out: string[] = []): stri
 }
 
 /**
- * The `expandedPaths` set a freshly loaded document starts with: every object/array node at
- * nesting depth less than 2, matching THRIVE's own default of auto-expanding the first two
- * levels. `App` calls this once per view model to seed its `expandedPaths` state.
+ * The `expandedPaths` set a freshly loaded document starts with: every object/array node
+ * is expanded by default so that Key-Value tables and Tree views open in a fully expanded view.
  */
 export function defaultExpandedPaths(root: JsonNode): Set<string> {
-  const expanded = new Set<string>();
-  const visit = (node: JsonNode) => {
-    if ((node.kind === "object" || node.kind === "array") && node.path.length < 2) {
-      expanded.add(pathKey(node.path));
-    }
-    for (const child of node.children ?? []) visit(child);
-  };
-  visit(root);
-  return expanded;
+  return new Set(collectExpandablePaths(root));
 }
 
 interface TreeNodeProps {
