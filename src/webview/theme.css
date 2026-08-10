@@ -206,9 +206,12 @@ button {
   outline: 1px solid var(--vscode-focusBorder);
   outline-offset: -1px;
 }
+.column-view__entry[aria-selected="true"],
+.column-view__entry[aria-selected="true"] * {
+  color: var(--vscode-list-activeSelectionForeground, #ffffff) !important;
+}
 .column-view__entry[aria-selected="true"] {
   background: var(--vscode-list-activeSelectionBackground, #094771);
-  color: var(--vscode-list-activeSelectionForeground, #ffffff);
 }
 .column-view__entry-label {
   overflow: hidden;
@@ -228,18 +231,11 @@ button {
   color: var(--vscode-descriptionForeground);
   font-family: var(--vscode-editor-font-family, monospace);
 }
-.column-view__entry[aria-selected="true"] .column-view__entry-count {
-  color: inherit;
-  opacity: 0.85;
-}
 .column-view__entry-arrow {
   color: var(--vscode-descriptionForeground);
   font-size: 14px;
   flex-shrink: 0;
   line-height: 1;
-}
-.column-view__entry[aria-selected="true"] .column-view__entry-arrow {
-  color: inherit;
 }
 .column-view__entry-value {
   font-family: var(--vscode-editor-font-family, monospace);
@@ -251,8 +247,16 @@ button {
   flex-shrink: 0;
   opacity: 0.9;
 }
+.column-view__entry[aria-selected="true"] .column-view__entry-count,
+.column-view__entry[aria-selected="true"] .column-view__entry-arrow {
+  opacity: 0.85;
+}
 .column-view__entry[aria-selected="true"] .column-view__entry-value {
-  color: inherit !important;
+  opacity: 0.95;
+}
+.column-view__entry[aria-selected="true"] .inline-edit-input {
+  color: var(--vscode-input-foreground, #cccccc) !important;
+  background: var(--vscode-input-background, var(--vscode-editor-background)) !important;
 }
 .column-view__resize-handle {
   position: absolute;
