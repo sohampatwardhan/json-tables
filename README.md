@@ -7,7 +7,7 @@
 
 Visualize and edit any `.json` or `.jsonc` file with interactive **Tree**, **Column** (macOS Finder-style), or **Table** (Key-Value) views, right beside your VS Code editor.
 
-[**View on Visual Studio Marketplace $\rightarrow$**](https://marketplace.visualstudio.com/items?itemName=sohampatwardhan.json-explorer-viewer)
+[**View on Visual Studio Marketplace**](https://marketplace.visualstudio.com/items?itemName=sohampatwardhan.json-explorer-viewer)
 
 ![JSON Explorer Icon](media/icon.png)
 
@@ -44,7 +44,7 @@ code --install-extension sohampatwardhan.json-explorer-viewer
 ## Usage
 
 1. Open any `.json` or `.jsonc` file in VS Code.
-2. Click the **`$(json)`** (`{ }`) icon in the editor tab bar (top right) or press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> $\rightarrow$ **JSON Explorer: Visualize JSON**.
+2. Click the **`$(json)`** (`{ }`) icon in the editor tab bar (top right) or press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> and run **JSON Explorer: Visualize JSON**.
 3. Switch between **Tree**, **Column**, and **Table** modes using the top toolbar.
 4. Double-click any key to rename it, or double-click any value to edit it.
 
