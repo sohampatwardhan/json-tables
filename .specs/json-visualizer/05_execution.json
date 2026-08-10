@@ -51,6 +51,42 @@
             "tags": [
               "done"
             ]
+          },
+          {
+            "end": "2026-08-10T04:24:47",
+            "id": "b_3_2_attempt1",
+            "label": "3.2 attempt 1 (verified, 384s)",
+            "start": "2026-08-10T04:18:23",
+            "tags": [
+              "done"
+            ]
+          },
+          {
+            "end": "2026-08-10T04:26:26",
+            "id": "b_3_3_attempt1",
+            "label": "3.3 attempt 1 (verified, 61s)",
+            "start": "2026-08-10T04:25:25",
+            "tags": [
+              "done"
+            ]
+          },
+          {
+            "end": "2026-08-10T04:28:27",
+            "id": "b_3_4_attempt1",
+            "label": "3.4 attempt 1 (verified, 81s)",
+            "start": "2026-08-10T04:27:06",
+            "tags": [
+              "done"
+            ]
+          },
+          {
+            "end": "2026-08-10T12:47:29",
+            "id": "b_3_5_attempt2",
+            "label": "3.5 attempt 2 (verified, 33s)",
+            "start": "2026-08-10T12:46:56",
+            "tags": [
+              "done"
+            ]
           }
         ],
         "name": "Stage 3"
@@ -60,14 +96,21 @@
   },
   "generated_from": {
     "file": "05_execution.md",
-    "sha256": "b47639b10d7aff6a86d4e139447c466bed646ed4b879c5df9f3d6cb86e5391fa"
+    "sha256": "f6900b551b0caebcbe3855fca7c809c07197f77caaca99d146b3a8d05ebfecee"
   },
   "runs": [
     {
-      "elapsed_seconds": "pending",
-      "outcome": "active",
+      "elapsed_seconds": "unknown",
+      "outcome": "interrupted",
       "run_id": "run-20260810T034356Z",
       "started_utc": "2026-08-10T03:43:56Z",
+      "stopped_utc": "unknown"
+    },
+    {
+      "elapsed_seconds": "pending",
+      "outcome": "active",
+      "run_id": "run-20260810T124656Z",
+      "started_utc": "2026-08-10T12:46:56Z",
       "stopped_utc": "pending"
     }
   ],
@@ -112,13 +155,73 @@
       "started_utc": "2026-08-10T04:14:51Z",
       "stopped_utc": "2026-08-10T04:17:08Z",
       "task": "3.1"
+    },
+    {
+      "attempt": 1,
+      "elapsed_seconds": 384,
+      "outcome": "verified",
+      "run_id": "run-20260810T034356Z",
+      "stage_wave": "Stage 3",
+      "started_utc": "2026-08-10T04:18:23Z",
+      "stopped_utc": "2026-08-10T04:24:47Z",
+      "task": "3.2"
+    },
+    {
+      "attempt": 1,
+      "elapsed_seconds": 61,
+      "outcome": "verified",
+      "run_id": "run-20260810T034356Z",
+      "stage_wave": "Stage 3",
+      "started_utc": "2026-08-10T04:25:25Z",
+      "stopped_utc": "2026-08-10T04:26:26Z",
+      "task": "3.3"
+    },
+    {
+      "attempt": 1,
+      "elapsed_seconds": 81,
+      "outcome": "verified",
+      "run_id": "run-20260810T034356Z",
+      "stage_wave": "Stage 3",
+      "started_utc": "2026-08-10T04:27:06Z",
+      "stopped_utc": "2026-08-10T04:28:27Z",
+      "task": "3.4"
+    },
+    {
+      "attempt": 1,
+      "elapsed_seconds": "unknown",
+      "outcome": "interrupted",
+      "run_id": "run-20260810T034356Z",
+      "stage_wave": "Stage 3",
+      "started_utc": "2026-08-10T04:28:27Z",
+      "stopped_utc": "unknown",
+      "task": "3.5"
+    },
+    {
+      "attempt": 2,
+      "elapsed_seconds": 33,
+      "outcome": "verified",
+      "run_id": "run-20260810T124656Z",
+      "stage_wave": "Stage 3",
+      "started_utc": "2026-08-10T12:46:56Z",
+      "stopped_utc": "2026-08-10T12:47:29Z",
+      "task": "3.5"
     }
   ],
   "unresolved": [
     {
       "id": "run-20260810T034356Z",
       "kind": "run",
+      "reason": "interrupted"
+    },
+    {
+      "id": "run-20260810T124656Z",
+      "kind": "run",
       "reason": "active"
+    },
+    {
+      "id": "3.5#1",
+      "kind": "task_attempt",
+      "reason": "interrupted"
     }
   ]
 }

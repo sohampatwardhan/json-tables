@@ -1,25 +1,22 @@
 {
   "concurrency": {
-    "active_stage": 3,
+    "active_stage": 4,
     "blocked": {},
     "parallel_candidates": [
-      "3.3",
-      "3.4",
-      "3.5"
+      "4.1",
+      "4.2"
     ],
     "ready": [
-      "3.3",
-      "3.4",
-      "3.5"
+      "4.1",
+      "4.2"
     ],
     "serial_candidates": [],
     "waves": [
       {
         "mode": "parallel",
         "tasks": [
-          "3.3",
-          "3.4",
-          "3.5"
+          "4.1",
+          "4.2"
         ],
         "wave": 1
       }
@@ -27,7 +24,7 @@
   },
   "generated_from": {
     "file": "04_tasks.md",
-    "sha256": "98b898b614198386c456706dfb2f9ccba6330eb863a09eef2768b287def1a923"
+    "sha256": "a1ebd9131d929ede96d152fc0c7b47a336783a1b7102c65de73d64c3a7b3d6ba"
   },
   "requirement_count": 35,
   "schema_version": 1,
@@ -205,7 +202,7 @@
     },
     {
       "capability_tier": "frontier",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -213,7 +210,8 @@
         "2.1"
       ],
       "files": [
-        "src/webview/ColumnView.tsx"
+        "src/webview/ColumnView.tsx",
+        "src/webview/ColumnView.test.tsx"
       ],
       "id": "3.3",
       "interfaces": "Consumes: `JsonNode` type from 2.1; Produces: `ColumnView` component, consumed by task 4.2's `App`",
@@ -234,7 +232,7 @@
     },
     {
       "capability_tier": "balanced",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -242,7 +240,8 @@
         "2.1"
       ],
       "files": [
-        "src/webview/TableView.tsx"
+        "src/webview/TableView.tsx",
+        "src/webview/TableView.test.tsx"
       ],
       "id": "3.4",
       "interfaces": "Consumes: `JsonNode` type from 2.1; Produces: `KeyValueTable`, `ArrayGrid` components, consumed by task 4.2's `App`",
@@ -262,7 +261,7 @@
     },
     {
       "capability_tier": "economical",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",

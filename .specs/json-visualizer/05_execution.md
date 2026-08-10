@@ -34,7 +34,8 @@
 ### Run Intervals
 | Run ID | Started UTC | Stopped UTC | Elapsed Seconds | Outcome |
 |---|---|---|---:|---|
-| run-20260810T034356Z | 2026-08-10T03:43:56Z | pending | pending | active |
+| run-20260810T034356Z | 2026-08-10T03:43:56Z | unknown | unknown | interrupted |
+| run-20260810T124656Z | 2026-08-10T12:46:56Z | pending | pending | active |
 
 ### Task Attempt Intervals
 | Run ID | Stage/Wave | Task | Attempt | Started UTC | Stopped UTC | Elapsed Seconds | Outcome |
@@ -44,6 +45,10 @@
 | run-20260810T034356Z | Stage 2 | 2.2 | 1 | 2026-08-10T04:07:50Z | 2026-08-10T04:13:04Z | 314 | verified |
 | run-20260810T034356Z | Stage 3 | 3.1 | 1 | 2026-08-10T04:14:51Z | 2026-08-10T04:17:08Z | 137 | verified |
 | run-20260810T034356Z | Stage 3 | 3.2 | 1 | 2026-08-10T04:18:23Z | 2026-08-10T04:24:47Z | 384 | verified |
+| run-20260810T034356Z | Stage 3 | 3.3 | 1 | 2026-08-10T04:25:25Z | 2026-08-10T04:26:26Z | 61 | verified |
+| run-20260810T034356Z | Stage 3 | 3.4 | 1 | 2026-08-10T04:27:06Z | 2026-08-10T04:28:27Z | 81 | verified |
+| run-20260810T034356Z | Stage 3 | 3.5 | 1 | 2026-08-10T04:28:27Z | unknown | unknown | interrupted |
+| run-20260810T124656Z | Stage 3 | 3.5 | 2 | 2026-08-10T12:46:56Z | 2026-08-10T12:47:29Z | 33 | verified |
 
 ### Execution Gantt
 
@@ -56,7 +61,18 @@ gantt
     section Stage 2
     2.1 attempt 1 (verified, 44s) :done, b_2_1_attempt1, 2026-08-10T04:07:06, 2026-08-10T04:07:50
     2.2 attempt 1 (verified, 314s) :done, b_2_2_attempt1, 2026-08-10T04:07:50, 2026-08-10T04:13:04
+    section Stage 3
+    3.1 attempt 1 (verified, 137s) :done, b_3_1_attempt1, 2026-08-10T04:14:51, 2026-08-10T04:17:08
+    3.2 attempt 1 (verified, 384s) :done, b_3_2_attempt1, 2026-08-10T04:18:23, 2026-08-10T04:24:47
+    3.3 attempt 1 (verified, 61s) :done, b_3_3_attempt1, 2026-08-10T04:25:25, 2026-08-10T04:26:26
+    3.4 attempt 1 (verified, 81s) :done, b_3_4_attempt1, 2026-08-10T04:27:06, 2026-08-10T04:28:27
+    3.5 attempt 2 (verified, 33s) :done, b_3_5_attempt2, 2026-08-10T12:46:56, 2026-08-10T12:47:29
 ```
+
+Run `run-20260810T034356Z` and task 3.5's first attempt were left open across a session pause
+between roughly 04:29 and 12:46 UTC; both are recorded `interrupted` with unknown duration
+(never fabricated) rather than shown as multi-hour bars. Work resumed as run
+`run-20260810T124656Z`, and task 3.5 completed on its second attempt.
 
 ## Checkpoints
 

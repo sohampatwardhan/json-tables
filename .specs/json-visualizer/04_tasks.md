@@ -185,7 +185,7 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Delegation:** parallel-safe
     - _Requirements: 8.1, 8.4_
 
-- [ ] 3. Core Rendering and Parsing Logic
+- [x] 3. Core Rendering and Parsing Logic
   - [x] 3.1 Implement the View Model Builder
     - Create [`src/viewModelBuilder.ts`](../../src/viewModelBuilder.ts) exporting `buildViewModel(text: string): ViewModel`.
       Consult the Current Technology Evidence entry for `jsonc-parser`'s corrected API note in
@@ -260,15 +260,19 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Delegation:** parallel-safe
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.7_
 
-  - [ ] 3.3 Implement the Column View component
-    - Create `src/webview/ColumnView.tsx` exporting `ColumnView({ root, selectedPath,
+  - [x] 3.3 Implement the Column View component
+    - Create [`src/webview/ColumnView.tsx`](../../src/webview/ColumnView.tsx) exporting `ColumnView({ root, selectedPath,
       onSelectPath })`: one `Column` per segment of `selectedPath` (plus the root), each listing
-      its node's entries. Selecting an object/array entry calls `onSelectPath([...selectedPath,
-      key])`; selecting a scalar entry sets a local `detailValue` shown in the rightmost detail
-      pane instead of extending `selectedPath`.
+      its node's entries. Selecting an object/array entry in the column at index `i` calls
+      `onSelectPath([...selectedPath.slice(0, i), key])` — truncating from that column forward
+      before appending, so selecting in an earlier column (while later columns are still shown)
+      replaces the stale drill-down instead of appending past it; for the common case of
+      selecting in the last column this is equivalent to a plain append. Selecting a scalar
+      entry sets a local `detailValue` shown in the rightmost detail pane instead of extending
+      `selectedPath`.
     - Each `Column` tracks its own pixel width in local state, adjusted by a `pointermove`
       handler on a resize handle at its right edge.
-    - **Files:** `src/webview/ColumnView.tsx`
+    - **Files:** [`src/webview/ColumnView.tsx`](../../src/webview/ColumnView.tsx), [`src/webview/ColumnView.test.tsx`](../../src/webview/ColumnView.test.tsx)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 2.1
@@ -287,13 +291,18 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Delegation:** parallel-safe
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-  - [ ] 3.4 Implement the Key-Value/Table View component
-    - Create `src/webview/TableView.tsx` exporting `KeyValueTable({ node })` (one row per key for
+  - [x] 3.4 Implement the Key-Value/Table View component
+    - Create [`src/webview/TableView.tsx`](../../src/webview/TableView.tsx) exporting `KeyValueTable({ node })` (one row per key for
       an object node) and `ArrayGrid({ node })` (one row per element, column headers unioned
-      across elements, for an array-of-objects node).
+      across elements, for an array-of-objects node). A top-level `TableView({ node })` picks
+      between them (array-of-objects → `ArrayGrid`, everything else → `KeyValueTable`).
+    - `KeyValueTable` also handles a plain array of scalars (falling back to each element's index
+      as the row label) — a case R5.1-R5.3 don't explicitly name but that `TableView`'s
+      not-array-of-objects branch routes here regardless, so it needed a defined behavior rather
+      than crashing on a missing `key`.
     - Any cell whose value is itself an object/array renders a `PreviewBadge` (`"{n}"`/`"[n]"`)
       instead of the nested content.
-    - **Files:** `src/webview/TableView.tsx`
+    - **Files:** [`src/webview/TableView.tsx`](../../src/webview/TableView.tsx), [`src/webview/TableView.test.tsx`](../../src/webview/TableView.test.tsx)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 2.1
@@ -310,16 +319,17 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Delegation:** parallel-safe
     - _Requirements: 5.1, 5.2, 5.3_
 
-  - [ ] 3.5 Implement the theme stylesheet
-    - Create `src/webview/theme.css` mapping each `NodeKind` value to a
-      `--vscode-symbolIcon-*Foreground` variable (verify the exact per-kind id, e.g.
-      `symbolIcon.nullForeground`/`numberForeground`/`stringForeground`/`booleanForeground`,
-      against `code.visualstudio.com/api/references/theme-color` as flagged in
-      [`03_design.md`](03_design.md#current-technology-evidence), since Context7 confirmed the
-      `symbolIcon` category but not every individual id verbatim). Every other rule (background,
-      border, general foreground) resolves through a `--vscode-editor-*`/`--vscode-panel-*`
-      variable — no rule may set a literal color value.
-    - **Files:** `src/webview/theme.css`
+  - [x] 3.5 Implement the theme stylesheet
+    - Create [`src/webview/theme.css`](../../src/webview/theme.css) mapping each `NodeKind` value to a
+      `--vscode-symbolIcon-*Foreground` variable. The exact per-kind ids
+      (`symbolIcon.nullForeground`/`booleanForeground`/`numberForeground`/`stringForeground`/
+      `objectForeground`/`arrayForeground`) were confirmed against VS Code's own
+      `symbolIcons.ts` source (Context7's excerpt of the theme-color reference page, and two
+      direct fetches of that page, didn't surface this section — the page is too long for the
+      fetch tool's summarizer). Every other rule (background, border, general foreground)
+      resolves through a `--vscode-editor-*`/`--vscode-panel-*`/`--vscode-list-*` variable — no
+      rule sets a literal color value (confirmed by grep).
+    - **Files:** [`src/webview/theme.css`](../../src/webview/theme.css)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 2.1

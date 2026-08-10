@@ -1,0 +1,161 @@
+/*
+ * Every rule here resolves through a `--vscode-*` custom property — never a literal color
+ * value — so the panel repaints automatically under whatever VS Code color theme is active
+ * (light/dark/high-contrast), per Correctness Property 14 in 03_design.md. Leaf-value coloring
+ * is keyed by `[data-kind]`, which every renderer (Tree/Column/Table) emits on scalar values and
+ * on object/array preview badges, and maps to the `symbolIcon.*Foreground` theme-color category
+ * VS Code already uses for the exact same kinds in its own Outline view. The six ids below were
+ * confirmed directly against microsoft/vscode's symbolIcons.ts registration source on
+ * 2026-08-10 (see 03_design.md's Current Technology Evidence).
+ */
+
+body {
+  margin: 0;
+  padding: 8px;
+  color: var(--vscode-editor-foreground);
+  background: var(--vscode-editor-background);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Type-keyed leaf coloring — the one place NodeKind maps to a theme color. */
+[data-kind="null"] {
+  color: var(--vscode-symbolIcon-nullForeground);
+}
+[data-kind="boolean"] {
+  color: var(--vscode-symbolIcon-booleanForeground);
+}
+[data-kind="number"] {
+  color: var(--vscode-symbolIcon-numberForeground);
+}
+[data-kind="string"] {
+  color: var(--vscode-symbolIcon-stringForeground);
+}
+[data-kind="object"] {
+  color: var(--vscode-symbolIcon-objectForeground);
+}
+[data-kind="array"] {
+  color: var(--vscode-symbolIcon-arrayForeground);
+}
+
+/* Tree view */
+.tree-node__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+.tree-node__toggle:hover,
+.tree-node__toggle:focus-visible {
+  background: var(--vscode-list-hoverBackground);
+  outline: 1px solid var(--vscode-focusBorder);
+}
+.tree-node__chevron {
+  display: inline-block;
+  transition: transform 0.1s ease;
+  color: var(--vscode-icon-foreground);
+}
+.tree-node__chevron--expanded {
+  transform: rotate(90deg);
+}
+.tree-node__badge {
+  color: var(--vscode-descriptionForeground);
+}
+.tree-node__children {
+  margin-left: 16px;
+  border-left: 1px solid var(--vscode-tree-indentGuidesStroke);
+  padding-left: 8px;
+}
+.tree-node--leaf {
+  padding: 2px 4px 2px 24px;
+}
+
+/* Column view */
+.column-view {
+  display: flex;
+  height: 100%;
+  overflow-x: auto;
+}
+.column-view__column {
+  position: relative;
+  flex-shrink: 0;
+  border-right: 1px solid var(--vscode-panel-border);
+  overflow-y: auto;
+}
+.column-view__entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.column-view__entry {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  padding: 4px 8px;
+  text-align: left;
+}
+.column-view__entry:hover,
+.column-view__entry:focus-visible {
+  background: var(--vscode-list-hoverBackground);
+  outline: 1px solid var(--vscode-focusBorder);
+}
+.column-view__entry[aria-selected="true"] {
+  background: var(--vscode-list-activeSelectionBackground);
+  color: var(--vscode-list-activeSelectionForeground);
+}
+.column-view__entry-arrow {
+  color: var(--vscode-descriptionForeground);
+}
+.column-view__resize-handle {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+}
+.column-view__detail-pane {
+  flex: 1;
+  padding: 8px;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* Table view */
+.table-view__kv,
+.table-view__grid {
+  border-collapse: collapse;
+  width: 100%;
+}
+.table-view__kv th,
+.table-view__kv td,
+.table-view__grid th,
+.table-view__grid td {
+  border: 1px solid var(--vscode-panel-border);
+  padding: 4px 8px;
+  text-align: left;
+}
+.table-view__kv th,
+.table-view__grid th {
+  background: var(--vscode-keybindingTable-headerBackground);
+  color: var(--vscode-descriptionForeground);
+}
+.table-view__badge {
+  color: var(--vscode-descriptionForeground);
+}
+
+/* Error banner (App root) */
+.app__error-banner {
+  padding: 8px;
+  border: 1px solid var(--vscode-inputValidation-errorBorder);
+  background: var(--vscode-inputValidation-errorBackground);
+  color: var(--vscode-inputValidation-errorForeground);
+}
