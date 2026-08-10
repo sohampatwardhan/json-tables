@@ -42,6 +42,7 @@
     }
   },
   "scripts": {
+    "vscode:prepublish": "npm run compile -- --production",
     "compile": "node esbuild.config.mjs",
     "watch": "node esbuild.config.mjs --watch",
     "test": "node --import tsx --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\"",
