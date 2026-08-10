@@ -4,8 +4,10 @@
   "description": "Visualize JSON files as an interactive Tree, Column, or Key-Value/Table view, right beside the source editor.",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
+  "icon": "media/icon.png",
   "engines": {
-    "vscode": "^1.90.0"
+    "vscode": "^1.125.0"
   },
   "main": "./dist/extension.js",
   "categories": ["Visualization", "Other"],

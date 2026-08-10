@@ -44,7 +44,7 @@ view, or a Key-Value/Table view — without leaving the source file or risking a
 - Live refresh: the panel updates when the underlying file changes (edit or external change),
   without requiring the user to reopen it.
 - Packaging structured so a later Marketplace publish is just an account + `vsce publish` away:
-  `package.json` metadata, README, icon, and semantic versioning from `0.1.0`. No VS Code
+  [`package.json`](../../package.json) metadata, README, icon, and semantic versioning from `0.1.0`. No VS Code
   publisher account exists yet; v1 ships as a locally built/installed `.vsix` or via the
   Extension Development Host.
 
@@ -138,7 +138,7 @@ block
 
 The three subsystems are independently testable: the extension host owns document access and
 message dispatch; the Webview owns rendering only and never touches the filesystem directly;
-the editor UI's title button is a declarative `package.json` contribution with no logic of its
+the editor UI's title button is a declarative [`package.json`](../../package.json) contribution with no logic of its
 own.
 
 ## Failure and Verification Strategy

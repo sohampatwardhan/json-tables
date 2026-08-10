@@ -1,19 +1,22 @@
 {
   "concurrency": {
-    "active_stage": 1,
+    "active_stage": 2,
     "blocked": {},
-    "parallel_candidates": [],
+    "parallel_candidates": [
+      "2.1",
+      "2.2"
+    ],
     "ready": [
-      "1.1"
+      "2.1",
+      "2.2"
     ],
-    "serial_candidates": [
-      "1.1"
-    ],
+    "serial_candidates": [],
     "waves": [
       {
-        "mode": "serial",
+        "mode": "parallel",
         "tasks": [
-          "1.1"
+          "2.1",
+          "2.2"
         ],
         "wave": 1
       }
@@ -21,7 +24,7 @@
   },
   "generated_from": {
     "file": "04_tasks.md",
-    "sha256": "ea5fcfe22c1ff3ddee7cdef61f18cc9d4bed1301ff16a1ced9fbdb43160590d3"
+    "sha256": "4cd0977b58507a0fdf025e0df7ca0ac8e71ea2118b8023c6a80b655ddaeca86d"
   },
   "requirement_count": 35,
   "schema_version": 1,
@@ -56,7 +59,7 @@
   "tasks": [
     {
       "capability_tier": "frontier",
-      "checked": false,
+      "checked": true,
       "delegation": "controller",
       "dependency_delivery": "none",
       "dependency_resolution": "change",
@@ -68,7 +71,7 @@
         "esbuild.config.mjs"
       ],
       "id": "1.1",
-      "interfaces": "Consumes: none (first task in the feature); Produces: `package.json` (npm scripts `compile`, `watch`, `test`, `package`; `jsonTables.visualize` command + `editor/title` menu contribution), `tsconfig.json`, `esbuild.config.mjs` build pipeline producing `dist/extension.js` and `dist/webview/main.js`",
+      "interfaces": "Consumes: none (first task in the feature); Produces: [`package.json`](../../package.json) (npm scripts `compile`, `watch`, `test`, `package`; `jsonTables.visualize` command + `editor/title` menu contribution), [`tsconfig.json`](../../tsconfig.json), [`esbuild.config.mjs`](../../esbuild.config.mjs) build pipeline producing [`dist/extension.js`](../../dist/extension.js) and [`dist/webview/main.js`](../../dist/webview/main.js)",
       "optional": false,
       "reasoning_level": "high",
       "requirements": [
@@ -81,7 +84,7 @@
       "stage": 1,
       "task_category": "code_analysis",
       "title": "Scaffold the extension project, add its dependencies, and configure its manifest contributions",
-      "verification": "`npm install && npm run compile` exits 0 (stub entry files may be empty at this point \u2014 the build config itself is what's under test); in the Extension Development Host, opening a `.json` file shows the \"Visualize JSON\" editor-title icon and opening a `.md` file does not; both pre- and post-change dependency-audit reports reviewed with no unresolved `blocked`/`unavailable`/`invalid` result"
+      "verification": "`npm install && npm run compile` exits 0 (stub entry files, since the build config itself is what's under test); `npx tsc --noEmit` exits 0; `npm test` runs the empty suite cleanly (0 tests, exit 0); `npx vsce ls` validates the manifest and confirms the packaged file list is exactly [`package.json`](../../package.json), [`dist/extension.js`](../../dist/extension.js), [`dist/webview/main.js`](../../dist/webview/main.js); both pre- and post-change dependency-audit reports reviewed with no unresolved `blocked`/`unavailable`/`invalid` result. The interactive check \u2014 opening a `.json` file shows the editor-title icon, a `.md` file does not \u2014 requires a live VS Code GUI the execution environment doesn't have; deferred to the human walkthrough in task 6.2, which already covers it."
     },
     {
       "capability_tier": "balanced",
@@ -96,7 +99,7 @@
         "src/shared/types.ts"
       ],
       "id": "2.1",
-      "interfaces": "Consumes: `tsconfig.json` from 1.1; Produces: `NodeKind`, `JsonNode`, `ViewModel`, `ViewMode`, `HostMessage`, `WebviewMessage` types importable from `src/shared/types.ts`",
+      "interfaces": "Consumes: [`tsconfig.json`](../../tsconfig.json) from 1.1; Produces: `NodeKind`, `JsonNode`, `ViewModel`, `ViewMode`, `HostMessage`, `WebviewMessage` types importable from `src/shared/types.ts`",
       "optional": false,
       "reasoning_level": "medium",
       "requirements": [
@@ -362,7 +365,7 @@
         "src/extension.ts"
       ],
       "id": "5.1",
-      "interfaces": "Consumes: `PanelController.createOrReveal` from 4.1, the `jsonTables.visualize` command id contributed in 1.1; Produces: `activate(context)` as the `package.json` `main` entry point's exported activation function",
+      "interfaces": "Consumes: `PanelController.createOrReveal` from 4.1, the `jsonTables.visualize` command id contributed in 1.1; Produces: `activate(context)` as the [`package.json`](../../package.json) `main` entry point's exported activation function",
       "optional": false,
       "reasoning_level": "low",
       "requirements": [
@@ -389,7 +392,7 @@
         "src/webview/main.tsx"
       ],
       "id": "5.2",
-      "interfaces": "Consumes: `App` component from 4.2, `acquireVsCodeApi()` (VS Code webview API); Produces: the `dist/webview/main.js` bundle entry point task 4.1's `panelController.ts` HTML references",
+      "interfaces": "Consumes: `App` component from 4.2, `acquireVsCodeApi()` (VS Code webview API); Produces: the [`dist/webview/main.js`](../../dist/webview/main.js) bundle entry point task 4.1's `panelController.ts` HTML references",
       "optional": false,
       "reasoning_level": "low",
       "requirements": [
@@ -443,8 +446,7 @@
       "files": [
         "README.md",
         "LICENSE",
-        "icon asset (path TBD by author)",
-        "package.json` (add"
+        "media/icon.png"
       ],
       "id": "6.2",
       "interfaces": "Consumes: the completed, compiled extension from tasks 1.1-5.2; Produces: an installable `.vsix` file and a recorded walkthrough result",

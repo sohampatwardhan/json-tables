@@ -5847,21 +5847,21 @@
     ],
     "statuses": [
       {
-        "attempted_at": "2026-08-10T03:53:05.470713Z",
+        "attempted_at": "2026-08-10T04:04:49.851678Z",
         "diagnostic": "",
         "provenance": "",
         "source": "inventory",
         "state": "partial"
       },
       {
-        "attempted_at": "2026-08-10T03:53:05.264306Z",
+        "attempted_at": "2026-08-10T04:04:49.644560Z",
         "diagnostic": "resolved dependency inventory is incomplete",
         "provenance": "",
         "source": "inventory-completeness",
         "state": "partial"
       },
       {
-        "attempted_at": "2026-08-10T03:53:05.469856Z",
+        "attempted_at": "2026-08-10T04:04:49.850797Z",
         "diagnostic": "",
         "provenance": "",
         "source": "npm-list",
@@ -5870,51 +5870,51 @@
     ]
   },
   "mode": "change",
-  "project_revision": "",
+  "project_revision": "4f2bc9358162451fbf624d173df199b87152b036",
   "schema_version": "1.0",
   "sources": [
     {
-      "attempted_at": "2026-08-10T03:53:06.359026Z",
+      "attempted_at": "2026-08-10T04:04:50.820154Z",
       "diagnostic": "ecosystem not present",
       "provenance": "",
       "source": "cargo-audit",
       "state": "not_applicable"
     },
     {
-      "attempted_at": "2026-08-10T03:53:06.359028Z",
+      "attempted_at": "2026-08-10T04:04:50.820156Z",
       "diagnostic": "ecosystem not present",
       "provenance": "",
       "source": "govulncheck",
       "state": "not_applicable"
     },
     {
-      "attempted_at": "2026-08-10T03:53:06.608594Z",
+      "attempted_at": "2026-08-10T04:04:50.954480Z",
       "diagnostic": "response exceeded 1000000 byte limit",
       "provenance": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
       "source": "kev",
       "state": "unavailable"
     },
     {
-      "attempted_at": "2026-08-10T03:53:06.359007Z",
+      "attempted_at": "2026-08-10T04:04:50.820135Z",
       "diagnostic": "",
       "provenance": "",
       "source": "npm-audit",
       "state": "ok"
     },
     {
-      "attempted_at": "2026-08-10T03:53:06.055213Z",
+      "attempted_at": "2026-08-10T04:04:50.493394Z",
       "diagnostic": "",
       "provenance": "https://api.osv.dev/v1",
       "source": "osv",
       "state": "ok"
     },
     {
-      "attempted_at": "2026-08-10T03:53:06.359030Z",
+      "attempted_at": "2026-08-10T04:04:50.820158Z",
       "diagnostic": "ecosystem not present",
       "provenance": "",
       "source": "pip-audit",
       "state": "not_applicable"
     }
   ],
-  "timestamp": "2026-08-10T03:53:05.264306Z"
+  "timestamp": "2026-08-10T04:04:49.644560Z"
 }

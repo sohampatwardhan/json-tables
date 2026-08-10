@@ -63,14 +63,17 @@ flowchart TD
 All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shared types); Stage
 4 and Stage 5 are each a two-task parallel wave; the two Stage 6 tasks form the final checkpoint.
 
-- [ ] 1. Project Scaffolding
-  - [ ] 1.1 Scaffold the extension project, add its dependencies, and configure its manifest contributions
-    - Create `package.json` (name `json-tables`, `main: "./dist/extension.js"`,
-      `engines.vscode: "^1.90.0"`, `scripts.compile`/`scripts.watch`/`scripts.test`/`scripts.package`),
-      `tsconfig.json` (strict mode, `target: "ES2022"`, `module: "ESNext"`, no emit — esbuild
-      transpiles), and `esbuild.config.mjs` with two build entries: `src/extension.ts` →
-      `dist/extension.js` (platform `node`, external `vscode`) and `src/webview/main.tsx` →
-      `dist/webview/main.js` (platform `browser`, `jsx: "automatic"`, `jsxImportSource:
+- [x] 1. Project Scaffolding
+  - [x] 1.1 Scaffold the extension project, add its dependencies, and configure its manifest contributions
+    - Create [`package.json`](../../package.json) (name `json-tables`, `main: "./dist/extension.js"`,
+      `engines.vscode: "^1.125.0"` — matched to the exact `@types/vscode` version below rather
+      than an arbitrary older floor, since `vsce` rejects `@types/vscode` newer than
+      `engines.vscode` (caught by actually running `vsce ls` during task 1.1),
+      `scripts.compile`/`scripts.watch`/`scripts.test`/`scripts.package`),
+      [`tsconfig.json`](../../tsconfig.json) (strict mode, `target: "ES2022"`, `module: "ESNext"`, no emit — esbuild
+      transpiles), and [`esbuild.config.mjs`](../../esbuild.config.mjs) with two build entries: [`src/extension.ts`](../../src/extension.ts) →
+      [`dist/extension.js`](../../dist/extension.js) (platform `node`, external `vscode`) and [`src/webview/main.tsx`](../../src/webview/main.tsx) →
+      [`dist/webview/main.js`](../../dist/webview/main.js) (platform `browser`, `jsx: "automatic"`, `jsxImportSource:
       "preact"`, minified in `--production`).
     - Add `dependencies`: `preact@10.29.8`, `jsonc-parser@3.3.1`. Add `devDependencies`:
       `esbuild@0.28.2`, `typescript@7.0.2`, `@types/node@26.2.0`, `@types/vscode@1.125.0`,
@@ -83,28 +86,43 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       gap between task 1.1's dependency list and what those tasks' own Verification fields
       require).
     - Confirm during setup that esbuild's default CSS-import bundling emits a sibling
-      `dist/webview/main.css` alongside `dist/webview/main.js` when `src/webview/main.tsx`
+      `dist/webview/main.css` alongside [`dist/webview/main.js`](../../dist/webview/main.js) when [`src/webview/main.tsx`](../../src/webview/main.tsx)
       imports `theme.css` (task 5.2) — task 4.1's webview HTML generation links this output.
-    - In the same `package.json`, add `contributes.commands` for `jsonTables.visualize`
+    - Also add `license: "MIT"` and `icon: "media/icon.png"` to [`package.json`](../../package.json) now, since this
+      task is the file's sole owner across the plan — task 6.2 creates the referenced `LICENSE`
+      and `media/icon.png` files later without needing to touch [`package.json`](../../package.json) itself (avoids a
+      later task falsely reading as a second dependency-resolution owner of the manifest).
+    - In the same [`package.json`](../../package.json), add `contributes.commands` for `jsonTables.visualize`
       ("Visualize JSON") and `contributes.menus["editor/title"]` with `"when": "resourceLangId
       == json || resourceLangId == jsonc"`, `"group": "navigation"` — the `when`-clause syntax
       confirmed in [`03_design.md`](03_design.md#current-technology-evidence).
-    - Add `.gitignore` (`node_modules/`, `dist/`, `*.vsix`) and `.vscodeignore` (excludes `src/`,
-      [`.specs/`](../../.specs), test files from the packaged `.vsix`).
-    - **Files:** `package.json`, `package-lock.json`, `tsconfig.json`, `esbuild.config.mjs`,
-      `.gitignore`, `.vscodeignore`
+    - Add [`.gitignore`](../../.gitignore) ([`node_modules/`](../../node_modules), [`dist/`](../../dist), `*.vsix`) and [`.vscodeignore`](../../.vscodeignore) (excludes [`src/`](../../src),
+      [`.specs/`](../../.specs), [`node_modules/`](../../node_modules) — esbuild already bundles `preact`/
+      `jsonc-parser` into [`dist/`](../../dist), so shipping [`node_modules`](../../node_modules) too would just bloat the `.vsix` —
+      and test files from the packaged `.vsix`; confirmed with `vsce ls` that the packaged file
+      list is exactly [`package.json`](../../package.json), [`dist/extension.js`](../../dist/extension.js), [`dist/webview/main.js`](../../dist/webview/main.js)).
+    - **Files:** [`package.json`](../../package.json), [`package-lock.json`](../../package-lock.json), [`tsconfig.json`](../../tsconfig.json), [`esbuild.config.mjs`](../../esbuild.config.mjs),
+      [`.gitignore`](../../.gitignore), [`.vscodeignore`](../../.vscodeignore)
     - **Dependency resolution:** change
     - **Dependency delivery:** none
-    - **Context7 evidence:** state=pending | identity=/evanw/esbuild | version=0.28.2 | decision=confirm `--jsx`/`jsxImportSource` bundling flags for Preact per [`03_design.md`](03_design.md#current-technology-evidence) before finalizing `esbuild.config.mjs`
-    - **Pre-change dependency audit:** state=pending | command=`dependency-security-audit change` | expected_json=`.security/dependency-audit/pre-change/latest.json` | expected_markdown=`.security/dependency-audit/pre-change/latest.md` | review=pending
-    - **Resolution edit:** state=pending | expected_files=package.json, package-lock.json
-    - **Project tests:** state=pending | expected_evidence=`npm install && npm run compile` exits 0
-    - **Post-change dependency audit:** state=pending | command=`dependency-security-audit change` | expected_json=`.security/dependency-audit/post-change/latest.json` | expected_markdown=`.security/dependency-audit/post-change/latest.md` | review=pending
+    - **Context7 evidence:** state=completed | identity=/evanw/esbuild | version=0.28.2 | decision=confirmed `jsx: "automatic"` + `jsxImportSource: "preact"` are esbuild's real option names/values for Preact's automatic JSX runtime (landed ≥0.14.51); used in [`esbuild.config.mjs`](../../esbuild.config.mjs)'s webview build config
+    - **Pre-change dependency audit:** state=completed | command=dependency-security-audit change | mode=change | timestamp=2026-08-10T04:04:49.399969Z | project_revision=4f2bc9358162451fbf624d173df199b87152b036 | inventory_fingerprint=8c7c6ec061c7c79294ca928b41cae01171b7cd6d0bd02556fdf1ca54014da338 | json=[.security/dependency-audit/pre-change.json](../../.security/dependency-audit/pre-change.json) | markdown=[.security/dependency-audit/pre-change.md](../../.security/dependency-audit/pre-change.md) | review=completed | result=warnings | exit=0 | decision=baseline run with package.json/package-lock.json/node_modules temporarily removed to capture the genuine pre-install state; 0 findings, "warnings" status is solely partial-inventory (nothing installed) — accepted, no remediation applicable | warnings_reviewed=true | clean=false
+    - **Resolution edit:** state=completed | files=[package.json](../../package.json), [package-lock.json](../../package-lock.json)
+    - **Project tests:** state=completed | evidence=[dist/extension.js](../../dist/extension.js), [dist/webview/main.js](../../dist/webview/main.js)
+    - **Post-change dependency audit:** state=completed | command=dependency-security-audit change | mode=change | timestamp=2026-08-10T04:04:49.644560Z | project_revision=4f2bc9358162451fbf624d173df199b87152b036 | inventory_fingerprint=8897d9d7919117e1b0a883e9bd82a7fc15ebec55d3ce905685a06eafaebeb943 | json=[.security/dependency-audit/post-change.json](../../.security/dependency-audit/post-change.json) | markdown=[.security/dependency-audit/post-change.md](../../.security/dependency-audit/post-change.md) | review=completed | result=warnings | exit=0 | decision=0 blocking/actionable findings; "warnings" status is solely incomplete-inventory for optional platform-specific native binaries (esbuild/typescript/vsce prebuilt variants for platforms not installed here) plus an oversized KEV feed fetch — no remediation applicable, accepted | warnings_reviewed=true | clean=false
     - **Depends on:** none
     - **Stage:** 1
-    - **Interfaces:** Consumes: none (first task in the feature); Produces: `package.json` (npm scripts `compile`, `watch`, `test`, `package`; `jsonTables.visualize` command + `editor/title` menu contribution), `tsconfig.json`, `esbuild.config.mjs` build pipeline producing `dist/extension.js` and `dist/webview/main.js`
+    - **Interfaces:** Consumes: none (first task in the feature); Produces: [`package.json`](../../package.json) (npm scripts `compile`, `watch`, `test`, `package`; `jsonTables.visualize` command + `editor/title` menu contribution), [`tsconfig.json`](../../tsconfig.json), [`esbuild.config.mjs`](../../esbuild.config.mjs) build pipeline producing [`dist/extension.js`](../../dist/extension.js) and [`dist/webview/main.js`](../../dist/webview/main.js)
     - **Documentation:** no public surface (tooling/manifest config only)
-    - **Verification:** `npm install && npm run compile` exits 0 (stub entry files may be empty at this point — the build config itself is what's under test); in the Extension Development Host, opening a `.json` file shows the "Visualize JSON" editor-title icon and opening a `.md` file does not; both pre- and post-change dependency-audit reports reviewed with no unresolved `blocked`/`unavailable`/`invalid` result
+    - **Verification:** `npm install && npm run compile` exits 0 (stub entry files, since the
+      build config itself is what's under test); `npx tsc --noEmit` exits 0; `npm test` runs the
+      empty suite cleanly (0 tests, exit 0); `npx vsce ls` validates the manifest and confirms the
+      packaged file list is exactly [`package.json`](../../package.json), [`dist/extension.js`](../../dist/extension.js), [`dist/webview/main.js`](../../dist/webview/main.js);
+      both pre- and post-change dependency-audit reports reviewed with no unresolved
+      `blocked`/`unavailable`/`invalid` result. The interactive check — opening a `.json` file
+      shows the editor-title icon, a `.md` file does not — requires a live VS Code GUI the
+      execution environment doesn't have; deferred to the human walkthrough in task 6.2, which
+      already covers it.
     - **Estimated effort:** 1.5-2.5 hours
     - **Risk:** medium; first dependency introduction and lockfile creation for the whole project — a bad pin here affects every later task
     - **Task category:** code_analysis
@@ -122,7 +140,7 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Dependency delivery:** none
     - **Depends on:** 1.1
     - **Stage:** 2
-    - **Interfaces:** Consumes: `tsconfig.json` from 1.1; Produces: `NodeKind`, `JsonNode`,
+    - **Interfaces:** Consumes: [`tsconfig.json`](../../tsconfig.json) from 1.1; Produces: `NodeKind`, `JsonNode`,
       `ViewModel`, `ViewMode`, `HostMessage`, `WebviewMessage` types importable from
       `src/shared/types.ts`
     - **Documentation:** exported types get one doc comment each stating the field's role in the
@@ -311,7 +329,7 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       "dist", "webview")]`, and HTML with a nonce-based CSP (`default-src 'none'; script-src
       'nonce-<nonce>'; style-src 'nonce-<nonce>'`) — confirm this exact pattern against
       [`03_design.md`](03_design.md#current-technology-evidence) before writing it.
-    - The generated HTML must convert both `dist/webview/main.js` and its sibling
+    - The generated HTML must convert both [`dist/webview/main.js`](../../dist/webview/main.js) and its sibling
       `dist/webview/main.css` (esbuild's default output for `main.tsx`'s `theme.css` import, per
       task 1.1) through `panel.webview.asWebviewUri(Uri.joinPath(context.extensionUri, "dist",
       "webview", ...))` — `localResourceRoots` only whitelists the directory, it does not itself
@@ -386,16 +404,16 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       vscode.Disposable`, registering `jsonTables.visualize` (id from task 1.1's manifest entry);
       on invocation, reads `vscode.window.activeTextEditor?.document` and, if present, calls
       `PanelController.createOrReveal(context, document)`.
-    - Create `src/extension.ts` exporting `activate(context)`, calling
+    - Create [`src/extension.ts`](../../src/extension.ts) exporting `activate(context)`, calling
       `context.subscriptions.push(registerVisualizeCommand(context))`.
-    - **Files:** `src/commandHandler.ts`, `src/extension.ts`
+    - **Files:** `src/commandHandler.ts`, [`src/extension.ts`](../../src/extension.ts)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 4.1
     - **Stage:** 5
     - **Interfaces:** Consumes: `PanelController.createOrReveal` from 4.1, the
       `jsonTables.visualize` command id contributed in 1.1; Produces: `activate(context)` as the
-      `package.json` `main` entry point's exported activation function
+      [`package.json`](../../package.json) `main` entry point's exported activation function
     - **Documentation:** doc comment on `activate` and `registerVisualizeCommand` stating the
       activation contract (idempotent registration, no-op when there is no active editor)
     - **Verification:** Extension Development Host manual check — command runs from both the
@@ -407,16 +425,16 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - _Requirements: 1.3, 10.2_
 
   - [ ] 5.2 Implement the webview entry point
-    - Create `src/webview/main.tsx`: calls `acquireVsCodeApi()`, imports `theme.css`, attaches
+    - Create [`src/webview/main.tsx`](../../src/webview/main.tsx): calls `acquireVsCodeApi()`, imports `theme.css`, attaches
       `window.addEventListener("message", ...)` before mount so no early `init` message is
       missed, calls Preact's `render(<App/>, document.body)`, then posts `{ type: "ready" }`.
-    - **Files:** `src/webview/main.tsx`
+    - **Files:** [`src/webview/main.tsx`](../../src/webview/main.tsx)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 4.2
     - **Stage:** 5
     - **Interfaces:** Consumes: `App` component from 4.2, `acquireVsCodeApi()` (VS Code webview
-      API); Produces: the `dist/webview/main.js` bundle entry point task 4.1's `panelController.ts`
+      API); Produces: the [`dist/webview/main.js`](../../dist/webview/main.js) bundle entry point task 4.1's `panelController.ts`
       HTML references
     - **Documentation:** doc comment stating why the message listener attaches before `render`
       (so a fast `init` message from the host is never dropped)
@@ -430,7 +448,7 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
 
 - [ ] 6. Checkpoint — feature complete, ready for personal-use packaging
   - [ ] 6.1 Verify the read-only guarantee across the whole codebase
-    - Grep `src/` for `applyEdit`, `TextEditor.edit`, `WorkspaceEdit`, and `contenteditable`;
+    - Grep [`src/`](../../src) for `applyEdit`, `TextEditor.edit`, `WorkspaceEdit`, and `contenteditable`;
       confirm zero matches outside of comments/tests.
     - Manually inspect every rendered value site in `TreeView.tsx`, `ColumnView.tsx`, and
       `TableView.tsx` to confirm none is an `<input>`, `<textarea>`, or `contenteditable`
@@ -453,16 +471,16 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - _Requirements: 9.1, 9.2_
 
   - [ ] 6.2 Package the extension and run the end-to-end walkthrough
-    - Add `README.md`, `LICENSE`, and an icon referenced from `package.json`'s `icon` field (none
-      of these require a registered publisher id).
+    - Add `README.md`, `LICENSE`, and the icon image at `media/icon.png` (the `icon`/`license`
+      fields in [`package.json`](../../package.json) pointing at them were already added in task 1.1, which owns that
+      file). None of this requires a registered publisher id.
     - Run `npm run compile` then `npx vsce package` to produce a `.vsix`; install it into a local
       VS Code instance via "Install from VSIX...".
     - Manually walk through: object-only, array-of-objects, deeply nested (depth > 2), scalar-only,
       and malformed JSON fixtures, in both a light and a dark built-in theme, exercising the full
       open → view-mode-switch → edit-and-refresh → close lifecycle, from both the Extension
       Development Host and the installed `.vsix`.
-    - **Files:** `README.md`, `LICENSE`, icon asset (path TBD by author), `package.json` (add
-      `icon`/`repository`/`license` fields)
+    - **Files:** `README.md`, `LICENSE`, `media/icon.png`
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 5.1, 5.2

@@ -3,12 +3,27 @@
     "axisFormat": "%m-%d %H:%M",
     "dateFormat": "YYYY-MM-DDTHH:mm:ss",
     "diagram": "timeline",
-    "sections": [],
+    "sections": [
+      {
+        "bars": [
+          {
+            "end": "2026-08-10T03:57:14",
+            "id": "b_1_1_attempt1",
+            "label": "1.1 attempt 1 (verified, 439s)",
+            "start": "2026-08-10T03:49:55",
+            "tags": [
+              "done"
+            ]
+          }
+        ],
+        "name": "Stage 1"
+      }
+    ],
     "target": "gantt"
   },
   "generated_from": {
     "file": "05_execution.md",
-    "sha256": "e2e7a41233cbe6247231a803f839734d7e92fab42b5a8c03fe605f6ec582a9ff"
+    "sha256": "12a3bef2e62714624c0cff469847783768af71d570baefa75563fe67becb82fe"
   },
   "runs": [
     {
@@ -20,7 +35,18 @@
     }
   ],
   "schema_version": 1,
-  "task_attempts": [],
+  "task_attempts": [
+    {
+      "attempt": 1,
+      "elapsed_seconds": 439,
+      "outcome": "verified",
+      "run_id": "run-20260810T034356Z",
+      "stage_wave": "Stage 1",
+      "started_utc": "2026-08-10T03:49:55Z",
+      "stopped_utc": "2026-08-10T03:57:14Z",
+      "task": "1.1"
+    }
+  ],
   "unresolved": [
     {
       "id": "run-20260810T034356Z",

@@ -2,6 +2,7 @@
 src/**
 .security/**
 .git/**
+node_modules/**
 .gitignore
 .vscodeignore
 esbuild.config.mjs

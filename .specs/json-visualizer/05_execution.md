@@ -39,10 +39,17 @@
 ### Task Attempt Intervals
 | Run ID | Stage/Wave | Task | Attempt | Started UTC | Stopped UTC | Elapsed Seconds | Outcome |
 |---|---|---|---:|---|---|---:|---|
-| run-20260810T034356Z | Stage 1 | 1.1 | 1 | 2026-08-10T03:49:55Z | pending | pending | active |
+| run-20260810T034356Z | Stage 1 | 1.1 | 1 | 2026-08-10T03:49:55Z | 2026-08-10T03:57:14Z | 439 | verified |
 
 ### Execution Gantt
-_Regenerated at the next checkpoint/return once at least one task attempt has closed._
+
+```mermaid
+gantt
+    dateFormat YYYY-MM-DDTHH:mm:ss
+    axisFormat %m-%d %H:%M
+    section Stage 1
+    1.1 attempt 1 (verified, 439s) :done, b_1_1_attempt1, 2026-08-10T03:49:55, 2026-08-10T03:57:14
+```
 
 ## Checkpoints
 
@@ -56,7 +63,7 @@ _Regenerated at the next checkpoint/return once at least one task attempt has cl
      `jsdom@30.0.1` to task 1.1 and updated the three tasks' Verification wording to match.
   2. Task 4.1's CSP webview HTML generation never accounted for how `theme.css` (imported by
      task 5.2's `main.tsx`) actually reaches the page under `default-src 'none'`. Added an
-     explicit sub-step: convert `dist/webview/main.js`/`main.css` via
+     explicit sub-step: convert [`dist/webview/main.js`](../../dist/webview/main.js)/`main.css` via
      `webview.asWebviewUri(...)` and link the CSS with a nonce-carrying `<link>` tag.
   3. [03_design.md](03_design.md) and task 3.1 both misdescribed `jsonc-parser`'s `getLocation` as an
      offset-to-line/column converter; it actually resolves a JSON path segment at an offset (for

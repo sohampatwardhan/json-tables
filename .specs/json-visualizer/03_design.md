@@ -75,7 +75,7 @@ wiring.
 - `registerVisualizeCommand(context: vscode.ExtensionContext): vscode.Disposable` — registers
   `jsonTables.visualize`. On invocation, reads `vscode.window.activeTextEditor.document` and
   calls `PanelController.createOrReveal(context, document)`.
-- `package.json` contributes the command and its `editor/title` menu entry with
+- [`package.json`](../../package.json) contributes the command and its `editor/title` menu entry with
   `"when": "resourceLangId == json || resourceLangId == jsonc"` — **R1.1, R1.2**: VS Code itself
   hides/shows the button per the `when` clause, so no runtime polling is needed. `"group":
   "navigation"` places it beside the existing editor-title icons without touching them.
@@ -126,7 +126,7 @@ wiring.
 
 ### Webview: `webview/main.tsx`
 
-- Entry point bundled by `esbuild` to `dist/webview/main.js`. Calls `acquireVsCodeApi()`,
+- Entry point bundled by `esbuild` to [`dist/webview/main.js`](../../dist/webview/main.js). Calls `acquireVsCodeApi()`,
   attaches `window.addEventListener("message", ...)` to dispatch incoming `HostMessage`s into
   `App`'s state, and calls `render(<App/>, document.body)` (Preact's `render`). Posts
   `{ type: "ready" }` once mounted.
@@ -261,7 +261,7 @@ document, only to `PanelController` for view-mode bookkeeping.
 
 ### Property 1: Command visibility follows resource language
 The "Visualize JSON" editor-title control is visible exactly when the active editor's language
-is `json` or `jsonc`, and hidden otherwise, driven entirely by the `package.json` `when` clause.
+is `json` or `jsonc`, and hidden otherwise, driven entirely by the [`package.json`](../../package.json) `when` clause.
 **Validates: Requirements 1.1, 1.2**
 
 ### Property 2: Invocation opens a side panel without displacing the source
@@ -362,7 +362,7 @@ rendered in the Webview is inside a non-input, non-`contenteditable` element.
 
 ### Property 19: Packaging succeeds without publisher configuration
 `vsce package` (or `@vscode/vsce`'s programmatic API) produces a `.vsix` from this extension's
-`package.json` using only fields that don't require a registered publisher id at package time;
+[`package.json`](../../package.json) using only fields that don't require a registered publisher id at package time;
 installing that `.vsix` activates the same `commandHandler.ts` registration path as the Extension
 Development Host.
 **Validates: Requirements 10.1, 10.2**
@@ -410,7 +410,7 @@ Development Host.
 
 - **Security/authorization:** the Webview's CSP (`default-src 'none'; script-src 'nonce-<nonce>';
   style-src 'nonce-<nonce>'`) blocks any script/style not carrying the per-load nonce, and
-  `localResourceRoots` is scoped to the extension's own `dist/webview` directory, so no remote or
+  `localResourceRoots` is scoped to the extension's own [`dist/webview`](../../dist/webview) directory, so no remote or
   workspace-arbitrary content can load into the panel. There is no authentication/authorization
   surface — the extension only ever reads documents already open in the user's own VS Code
   session. Verification: manual inspection of the generated CSP header in the built HTML.
@@ -462,7 +462,7 @@ Strategy.
 
 ## Dependency Security Evidence
 
-No dependency resolution has been applied to a manifest yet: this project has no `package.json`
+No dependency resolution has been applied to a manifest yet: this project has no [`package.json`](../../package.json)
 or lockfile, and the `dependency-security-audit` tool audits *one exact resolved dependency
 snapshot* against an actual manifest+lock, so a real `change`-mode audit cannot run until the
 first task that adds these dependencies creates that manifest. Per the `spec-driven` skill's
@@ -473,7 +473,7 @@ exact versions selected now and an informational (non-project) advisory lookup f
 
 | Dependency / target version | Trigger and mode | Evidence | Result and decision |
 |---|---|---|---|
-| `preact@10.29.8` | dependency selection (this design) / `change` deferred to the task that creates `package.json` | Informational OSV lookup (not a project audit): no matching advisory records for this exact version | Selected; the owning task's `Dependency resolution: change` leaf must run the real pre/post `dependency-security-audit change` audit once the manifest exists |
+| `preact@10.29.8` | dependency selection (this design) / `change` deferred to the task that creates [`package.json`](../../package.json) | Informational OSV lookup (not a project audit): no matching advisory records for this exact version | Selected; the owning task's `Dependency resolution: change` leaf must run the real pre/post `dependency-security-audit change` audit once the manifest exists |
 | `esbuild@0.28.2` | dependency selection (this design) / `change` deferred | Informational OSV lookup: no matching advisory records for this exact version | Selected (build-time only, not shipped in the Webview runtime bundle); same deferred-audit requirement |
 | `jsonc-parser@3.3.1` | dependency selection (this design) / `change` deferred | Informational OSV lookup: no matching advisory records for this exact version | Selected; same deferred-audit requirement |
 
