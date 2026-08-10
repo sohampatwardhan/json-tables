@@ -129,20 +129,20 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Delegation:** controller
     - _Requirements: 1.1, 1.2, 10.1_
 
-- [ ] 2. Extension-Host Foundations
-  - [ ] 2.1 Define the shared data contract
-    - Create `src/shared/types.ts` with `NodeKind`, `JsonNode`, `ViewModel`, `ViewMode`,
+- [x] 2. Extension-Host Foundations
+  - [x] 2.1 Define the shared data contract
+    - Create [`src/shared/types.ts`](../../src/shared/types.ts) with `NodeKind`, `JsonNode`, `ViewModel`, `ViewMode`,
       `HostMessage`, `WebviewMessage` exactly as specified in
       [`03_design.md`](03_design.md#data-models)'s Data Models diagram, exported for use by both
       the extension host and webview build targets.
-    - **Files:** `src/shared/types.ts`
+    - **Files:** [`src/shared/types.ts`](../../src/shared/types.ts)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 1.1
     - **Stage:** 2
     - **Interfaces:** Consumes: [`tsconfig.json`](../../tsconfig.json) from 1.1; Produces: `NodeKind`, `JsonNode`,
       `ViewModel`, `ViewMode`, `HostMessage`, `WebviewMessage` types importable from
-      `src/shared/types.ts`
+      [`src/shared/types.ts`](../../src/shared/types.ts)
     - **Documentation:** exported types get one doc comment each stating the field's role in the
       `postMessage` contract (e.g. why `path: string[]` must stay stable across a refresh)
     - **Verification:** `npx tsc --noEmit` passes with these types imported from a scratch file
@@ -153,21 +153,28 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Delegation:** parallel-safe
     - _Requirements: 2.1_
 
-  - [ ] 2.2 Implement the document change watcher
-    - Create `src/documentWatcher.ts` exporting `watchDocument(document: vscode.TextDocument,
-      onChange: () => void, onClose: () => void): vscode.Disposable`, composing
-      `vscode.workspace.onDidChangeTextDocument` and `vscode.workspace.onDidCloseTextDocument`,
-      each filtered to `event.document === document` before invoking the callback.
-    - **Files:** `src/documentWatcher.ts`
+  - [x] 2.2 Implement the document change watcher
+    - Create [`src/documentWatcher.ts`](../../src/documentWatcher.ts) exporting `watchDocument(workspace: WorkspaceEvents,
+      document: vscode.TextDocument, onChange: () => void, onClose: () => void):
+      vscode.Disposable`, composing `workspace.onDidChangeTextDocument` and
+      `workspace.onDidCloseTextDocument`, each filtered to `event.document === document` before
+      invoking the callback. `workspace` is an explicit parameter (the caller passes
+      `vscode.workspace`) rather than a module-scope `import * as vscode from "vscode"` — the
+      real `vscode` module only resolves inside the Extension Host, so importing it as a value
+      would make this file impossible to unit-test under a plain Node.js test process (found
+      while implementing: Node's `--experimental-test-module-mocks` cannot intercept the `vscode`
+      specifier before `tsx`'s own resolver rejects it first).
+    - **Files:** [`src/documentWatcher.ts`](../../src/documentWatcher.ts)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 1.1
     - **Stage:** 2
-    - **Interfaces:** Consumes: `vscode.TextDocument` (VS Code API); Produces:
-      `watchDocument(document, onChange, onClose): vscode.Disposable`, consumed by task 4.1
+    - **Interfaces:** Consumes: `vscode.TextDocument` (VS Code API), `vscode.workspace`, passed by
+      the caller; Produces: `watchDocument(workspace, document, onChange, onClose):
+      vscode.Disposable`, consumed by task 4.1
     - **Documentation:** one doc comment on `watchDocument` stating the filtering contract and
       why disposal (not just ignoring callbacks) is required
-    - **Verification:** unit test (`src/documentWatcher.test.ts`, run via `npm test`) with a fake
+    - **Verification:** unit test ([`src/documentWatcher.test.ts`](../../src/documentWatcher.test.ts), run via `npm test`) with a fake
       event emitter asserting `onChange`/`onClose` fire only for the matching document and never
       after `dispose()`
     - **Estimated effort:** 45-60 minutes

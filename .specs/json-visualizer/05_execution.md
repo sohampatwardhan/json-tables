@@ -40,6 +40,8 @@
 | Run ID | Stage/Wave | Task | Attempt | Started UTC | Stopped UTC | Elapsed Seconds | Outcome |
 |---|---|---|---:|---|---|---:|---|
 | run-20260810T034356Z | Stage 1 | 1.1 | 1 | 2026-08-10T03:49:55Z | 2026-08-10T03:57:14Z | 439 | verified |
+| run-20260810T034356Z | Stage 2 | 2.1 | 1 | 2026-08-10T04:07:06Z | 2026-08-10T04:07:50Z | 44 | verified |
+| run-20260810T034356Z | Stage 2 | 2.2 | 1 | 2026-08-10T04:07:50Z | 2026-08-10T04:13:04Z | 314 | verified |
 
 ### Execution Gantt
 
@@ -49,6 +51,9 @@ gantt
     axisFormat %m-%d %H:%M
     section Stage 1
     1.1 attempt 1 (verified, 439s) :done, b_1_1_attempt1, 2026-08-10T03:49:55, 2026-08-10T03:57:14
+    section Stage 2
+    2.1 attempt 1 (verified, 44s) :done, b_2_1_attempt1, 2026-08-10T04:07:06, 2026-08-10T04:07:50
+    2.2 attempt 1 (verified, 314s) :done, b_2_2_attempt1, 2026-08-10T04:07:50, 2026-08-10T04:13:04
 ```
 
 ## Checkpoints

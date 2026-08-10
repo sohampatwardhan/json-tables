@@ -118,11 +118,14 @@ wiring.
 
 ### `documentWatcher.ts`
 
-- `watchDocument(document, onChange, onClose): vscode.Disposable` — thin wrapper composing
-  `vscode.workspace.onDidChangeTextDocument` (filtered to `event.document === document`) and
-  `vscode.workspace.onDidCloseTextDocument` (same filter) into the two callbacks
-  `PanelController` supplies. Kept separate from `PanelController` so the filtering logic is
-  independently testable without a real webview.
+- `watchDocument(workspace, document, onChange, onClose): vscode.Disposable` — thin wrapper
+  composing `workspace.onDidChangeTextDocument` (filtered to `event.document === document`) and
+  `workspace.onDidCloseTextDocument` (same filter) into the two callbacks `PanelController`
+  supplies. `workspace` is the caller-supplied `vscode.workspace` (a `WorkspaceEvents` parameter,
+  not a module-scope `import * as vscode from "vscode"`) precisely so this file never attempts
+  to resolve the real `vscode` module — which only exists inside the Extension Host process, not
+  under a plain Node.js test run — keeping the filtering logic unit-testable with a fake
+  workspace object instead of a mocked module.
 
 ### Webview: `webview/main.tsx`
 

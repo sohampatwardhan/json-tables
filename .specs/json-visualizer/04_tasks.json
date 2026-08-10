@@ -1,22 +1,31 @@
 {
   "concurrency": {
-    "active_stage": 2,
+    "active_stage": 3,
     "blocked": {},
     "parallel_candidates": [
-      "2.1",
-      "2.2"
+      "3.1",
+      "3.2",
+      "3.3",
+      "3.4",
+      "3.5"
     ],
     "ready": [
-      "2.1",
-      "2.2"
+      "3.1",
+      "3.2",
+      "3.3",
+      "3.4",
+      "3.5"
     ],
     "serial_candidates": [],
     "waves": [
       {
         "mode": "parallel",
         "tasks": [
-          "2.1",
-          "2.2"
+          "3.1",
+          "3.2",
+          "3.3",
+          "3.4",
+          "3.5"
         ],
         "wave": 1
       }
@@ -24,7 +33,7 @@
   },
   "generated_from": {
     "file": "04_tasks.md",
-    "sha256": "4cd0977b58507a0fdf025e0df7ca0ac8e71ea2118b8023c6a80b655ddaeca86d"
+    "sha256": "10dfb3ead300183ce4819d8bba76548d3383b7b608b6a99221340b34642fa3d5"
   },
   "requirement_count": 35,
   "schema_version": 1,
@@ -88,7 +97,7 @@
     },
     {
       "capability_tier": "balanced",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -99,7 +108,7 @@
         "src/shared/types.ts"
       ],
       "id": "2.1",
-      "interfaces": "Consumes: [`tsconfig.json`](../../tsconfig.json) from 1.1; Produces: `NodeKind`, `JsonNode`, `ViewModel`, `ViewMode`, `HostMessage`, `WebviewMessage` types importable from `src/shared/types.ts`",
+      "interfaces": "Consumes: [`tsconfig.json`](../../tsconfig.json) from 1.1; Produces: `NodeKind`, `JsonNode`, `ViewModel`, `ViewMode`, `HostMessage`, `WebviewMessage` types importable from [`src/shared/types.ts`](../../src/shared/types.ts)",
       "optional": false,
       "reasoning_level": "medium",
       "requirements": [
@@ -114,7 +123,7 @@
     },
     {
       "capability_tier": "balanced",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -125,7 +134,7 @@
         "src/documentWatcher.ts"
       ],
       "id": "2.2",
-      "interfaces": "Consumes: `vscode.TextDocument` (VS Code API); Produces: `watchDocument(document, onChange, onClose): vscode.Disposable`, consumed by task 4.1",
+      "interfaces": "Consumes: `vscode.TextDocument` (VS Code API), `vscode.workspace`, passed by the caller; Produces: `watchDocument(workspace, document, onChange, onClose): vscode.Disposable`, consumed by task 4.1",
       "optional": false,
       "reasoning_level": "medium",
       "requirements": [
@@ -137,7 +146,7 @@
       "stage": 2,
       "task_category": "code_analysis",
       "title": "Implement the document change watcher",
-      "verification": "unit test (`src/documentWatcher.test.ts`, run via `npm test`) with a fake event emitter asserting `onChange`/`onClose` fire only for the matching document and never after `dispose()`"
+      "verification": "unit test ([`src/documentWatcher.test.ts`](../../src/documentWatcher.test.ts), run via `npm test`) with a fake event emitter asserting `onChange`/`onClose` fire only for the matching document and never after `dispose()`"
     },
     {
       "capability_tier": "frontier",
