@@ -6,6 +6,10 @@
   "private": true,
   "license": "MIT",
   "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sohampatwardhan/json-tables.git"
+  },
   "engines": {
     "vscode": "^1.125.0"
   },
