@@ -1,19 +1,19 @@
 {
   "concurrency": {
-    "active_stage": 1,
+    "active_stage": 6,
     "blocked": {},
-    "parallel_candidates": [],
+    "parallel_candidates": [
+      "6.2"
+    ],
     "ready": [
-      "1.1"
+      "6.2"
     ],
-    "serial_candidates": [
-      "1.1"
-    ],
+    "serial_candidates": [],
     "waves": [
       {
-        "mode": "serial",
+        "mode": "parallel",
         "tasks": [
-          "1.1"
+          "6.2"
         ],
         "wave": 1
       }
@@ -21,7 +21,7 @@
   },
   "generated_from": {
     "file": "04_tasks.md",
-    "sha256": "fe1b5e08d0006608cec8eba31d1314d1496a5e4c22c2dfbb4a573b83f544e257"
+    "sha256": "acfc5c6ae509f3f564bfd480164bfe03b28c96cb8445d83971c8666ef57836e7"
   },
   "requirement_count": 35,
   "schema_version": 1,
@@ -56,7 +56,7 @@
   "tasks": [
     {
       "capability_tier": "frontier",
-      "checked": false,
+      "checked": true,
       "delegation": "controller",
       "dependency_delivery": "none",
       "dependency_resolution": "change",
@@ -68,7 +68,7 @@
         "esbuild.config.mjs"
       ],
       "id": "1.1",
-      "interfaces": "Consumes: none (first task in the feature); Produces: `package.json` (npm scripts `compile`, `watch`, `test`, `package`; `jsonTables.visualize` command + `editor/title` menu contribution), `tsconfig.json`, `esbuild.config.mjs` build pipeline producing `dist/extension.js` and `dist/webview/main.js`",
+      "interfaces": "Consumes: none (first task in the feature); Produces: [`package.json`](../../package.json) (npm scripts `compile`, `watch`, `test`, `package`; `jsonTables.visualize` command + `editor/title` menu contribution), [`tsconfig.json`](../../tsconfig.json), [`esbuild.config.mjs`](../../esbuild.config.mjs) build pipeline producing [`dist/extension.js`](../../dist/extension.js) and [`dist/webview/main.js`](../../dist/webview/main.js)",
       "optional": false,
       "reasoning_level": "high",
       "requirements": [
@@ -81,11 +81,11 @@
       "stage": 1,
       "task_category": "code_analysis",
       "title": "Scaffold the extension project, add its dependencies, and configure its manifest contributions",
-      "verification": "`npm install && npm run compile` exits 0 (stub entry files may be empty at this point \u2014 the build config itself is what's under test); in the Extension Development Host, opening a `.json` file shows the \"Visualize JSON\" editor-title icon and opening a `.md` file does not; both pre- and post-change dependency-audit reports reviewed with no unresolved `blocked`/`unavailable`/`invalid` result"
+      "verification": "`npm install && npm run compile` exits 0 (stub entry files, since the build config itself is what's under test); `npx tsc --noEmit` exits 0; `npm test` runs the empty suite cleanly (0 tests, exit 0); `npx vsce ls` validates the manifest and confirms the packaged file list is exactly [`package.json`](../../package.json), [`dist/extension.js`](../../dist/extension.js), [`dist/webview/main.js`](../../dist/webview/main.js); both pre- and post-change dependency-audit reports reviewed with no unresolved `blocked`/`unavailable`/`invalid` result. The interactive check \u2014 opening a `.json` file shows the editor-title icon, a `.md` file does not \u2014 requires a live VS Code GUI the execution environment doesn't have; deferred to the human walkthrough in task 6.2, which already covers it."
     },
     {
       "capability_tier": "balanced",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -96,7 +96,7 @@
         "src/shared/types.ts"
       ],
       "id": "2.1",
-      "interfaces": "Consumes: `tsconfig.json` from 1.1; Produces: `NodeKind`, `JsonNode`, `ViewModel`, `ViewMode`, `HostMessage`, `WebviewMessage` types importable from `src/shared/types.ts`",
+      "interfaces": "Consumes: [`tsconfig.json`](../../tsconfig.json) from 1.1; Produces: `NodeKind`, `JsonNode`, `ViewModel`, `ViewMode`, `HostMessage`, `WebviewMessage` types importable from [`src/shared/types.ts`](../../src/shared/types.ts)",
       "optional": false,
       "reasoning_level": "medium",
       "requirements": [
@@ -111,7 +111,7 @@
     },
     {
       "capability_tier": "balanced",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -122,7 +122,7 @@
         "src/documentWatcher.ts"
       ],
       "id": "2.2",
-      "interfaces": "Consumes: `vscode.TextDocument` (VS Code API); Produces: `watchDocument(document, onChange, onClose): vscode.Disposable`, consumed by task 4.1",
+      "interfaces": "Consumes: `vscode.TextDocument` (VS Code API), `vscode.workspace`, passed by the caller; Produces: `watchDocument(workspace, document, onChange, onClose): vscode.Disposable`, consumed by task 4.1",
       "optional": false,
       "reasoning_level": "medium",
       "requirements": [
@@ -134,11 +134,11 @@
       "stage": 2,
       "task_category": "code_analysis",
       "title": "Implement the document change watcher",
-      "verification": "unit test (`src/documentWatcher.test.ts`, run via `npm test`) with a fake event emitter asserting `onChange`/`onClose` fire only for the matching document and never after `dispose()`"
+      "verification": "unit test ([`src/documentWatcher.test.ts`](../../src/documentWatcher.test.ts), run via `npm test`) with a fake event emitter asserting `onChange`/`onClose` fire only for the matching document and never after `dispose()`"
     },
     {
       "capability_tier": "frontier",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -149,7 +149,7 @@
         "src/viewModelBuilder.ts"
       ],
       "id": "3.1",
-      "interfaces": "Consumes: `JsonNode`/`ViewModel`/`NodeKind` types from 2.1, `jsonc-parser`'s `parseTree`/`getLocation`; Produces: `buildViewModel(text): ViewModel`, consumed by task 4.1",
+      "interfaces": "Consumes: `JsonNode`/`ViewModel`/`NodeKind` types from 2.1, `jsonc-parser`'s `parseTree`; Produces: `buildViewModel(text): ViewModel`, consumed by task 4.1",
       "optional": false,
       "reasoning_level": "high",
       "requirements": [
@@ -161,22 +161,26 @@
       "stage": 3,
       "task_category": "code_analysis",
       "title": "Implement the View Model Builder",
-      "verification": "unit tests (`src/viewModelBuilder.test.ts`) covering an object, an array of scalars, an array of objects, nesting past depth 2, an empty document, and malformed inputs (unterminated string, truncated document), asserting both the `JsonNode` shape and the error branch's `message`/`line`/`column`"
+      "verification": "unit tests ([`src/viewModelBuilder.test.ts`](../../src/viewModelBuilder.test.ts)) covering an object, an array of scalars, an array of objects, nesting past depth 2, an empty document, and malformed inputs (unterminated string, truncated document), asserting both the `JsonNode` shape and the error branch's `message`/`line`/`column`"
     },
     {
       "capability_tier": "balanced",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
-      "dependency_resolution": "none",
+      "dependency_resolution": "change",
       "depends_on": [
         "2.1"
       ],
       "files": [
-        "src/webview/TreeView.tsx"
+        "src/webview/TreeView.tsx",
+        "src/webview/TreeView.test.tsx",
+        "src/webview/testSetup.ts",
+        "package.json",
+        "package-lock.json"
       ],
       "id": "3.2",
-      "interfaces": "Consumes: `JsonNode` type from 2.1; Produces: `TreeNode` component with the props above, consumed by task 4.2's `App`",
+      "interfaces": "Consumes: `JsonNode` type from 2.1; Produces: `TreeNode`, `defaultExpandedPaths`, `pathKey`, `collectExpandablePaths` from [`src/webview/TreeView.tsx`](../../src/webview/TreeView.tsx), consumed by task 4.2's `App`",
       "optional": false,
       "reasoning_level": "medium",
       "requirements": [
@@ -191,11 +195,11 @@
       "stage": 3,
       "task_category": "code_analysis",
       "title": "Implement the Tree View component",
-      "verification": "component test (`src/webview/TreeView.test.tsx` via `preact-render-to-string`) asserting depth-2 default expansion, independent per-node toggling, and the `data-kind` attribute per value type"
+      "verification": "component test ([`src/webview/TreeView.test.tsx`](../../src/webview/TreeView.test.tsx) via `@testing-library/preact` against a `jsdom` environment) asserting `defaultExpandedPaths` includes every depth-`<2` object/array node and excludes deeper ones, independent per-node toggling via simulated clicks, and the `data-kind` attribute per value type \u2014 4 tests, all passing; `npx tsc --noEmit` and `npm run compile` both exit 0"
     },
     {
       "capability_tier": "frontier",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -203,7 +207,8 @@
         "2.1"
       ],
       "files": [
-        "src/webview/ColumnView.tsx"
+        "src/webview/ColumnView.tsx",
+        "src/webview/ColumnView.test.tsx"
       ],
       "id": "3.3",
       "interfaces": "Consumes: `JsonNode` type from 2.1; Produces: `ColumnView` component, consumed by task 4.2's `App`",
@@ -220,11 +225,11 @@
       "stage": 3,
       "task_category": "code_analysis",
       "title": "Implement the Column View component",
-      "verification": "component test asserting drill-down appends exactly one column per object/array selection, scalar selection never appends a column, and a resize drag updates only the dragged column's width"
+      "verification": "component test (`@testing-library/preact` + `jsdom`) asserting drill-down appends exactly one column per object/array selection, scalar selection never appends a column, and a simulated `pointerdown`/`pointermove`/`pointerup` drag sequence updates only the dragged column's width"
     },
     {
       "capability_tier": "balanced",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -232,7 +237,8 @@
         "2.1"
       ],
       "files": [
-        "src/webview/TableView.tsx"
+        "src/webview/TableView.tsx",
+        "src/webview/TableView.test.tsx"
       ],
       "id": "3.4",
       "interfaces": "Consumes: `JsonNode` type from 2.1; Produces: `KeyValueTable`, `ArrayGrid` components, consumed by task 4.2's `App`",
@@ -248,11 +254,11 @@
       "stage": 3,
       "task_category": "code_analysis",
       "title": "Implement the Key-Value/Table View component",
-      "verification": "component test covering a plain object, an array of objects with heterogeneous keys (union headers), and a nested object/array cell rendering as a badge"
+      "verification": "component test covering a plain object, an array of objects with heterogeneous keys (union headers), a nested object/array cell rendering as a badge, a plain array of scalars, and (added post-fix) a scalar-root document \u2014 5 tests, all passing"
     },
     {
       "capability_tier": "economical",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -280,7 +286,7 @@
     },
     {
       "capability_tier": "frontier",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -289,7 +295,10 @@
         "2.2"
       ],
       "files": [
-        "src/panelController.ts"
+        "src/panelController.ts",
+        "src/debounce.ts",
+        "src/webviewHtml.ts",
+        "src/panelController.test.ts"
       ],
       "id": "4.1",
       "interfaces": "Consumes: `buildViewModel(text): ViewModel` from 3.1, `watchDocument(...)` from 2.2, `HostMessage`/`WebviewMessage` types from 2.1; Produces: `PanelController.createOrReveal(context, document): void`, consumed by task 5.1",
@@ -310,11 +319,11 @@
       "stage": 4,
       "task_category": "heavy_reasoning",
       "title": "Implement the Webview Panel Controller",
-      "verification": "unit test for the 150 ms debounce using fake timers (one `buildViewModel` call per burst, not per keystroke); manual Extension Development Host check that a second invocation on the same document reveals rather than duplicates the panel, and that the CSP header is present in the rendered HTML"
+      "verification": "unit tests (`debounce` via `node:test`'s `mock.timers` \u2014 one trailing call per burst, a fresh call after settling fires again; `renderWebviewHtml` \u2014 the CSP meta tag's nonce matches the `<script>`/`<link>` tags' nonces, `default-src 'none'` is present, URIs are embedded verbatim) \u2014 4 tests, all passing; `npx tsc --noEmit` and `npm run compile` both exit 0. Manual Extension Development Host check (deferred to task 6.2's walkthrough, no GUI in this environment): a second invocation on the same document reveals rather than duplicates the panel."
     },
     {
       "capability_tier": "frontier",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -325,7 +334,8 @@
         "3.5"
       ],
       "files": [
-        "src/webview/App.tsx"
+        "src/webview/App.tsx",
+        "src/webview/App.test.tsx"
       ],
       "id": "4.2",
       "interfaces": "Consumes: `TreeNode`/`ColumnView`/`KeyValueTable`/`ArrayGrid` components from 3.2-3.4, `theme.css` from 3.5, `HostMessage`/`WebviewMessage`/`ViewModel`/`ViewMode` types from 2.1; Produces: `App` component, mounted by task 5.2's `main.tsx`",
@@ -346,11 +356,11 @@
       "stage": 4,
       "task_category": "code_analysis",
       "title": "Implement the App root component",
-      "verification": "component test covering: error-state renders the inline banner and no view; `init`/`update` messages update `viewModel`; toggling view mode re-renders without re-requesting data; expand-all/collapse-all mutate the full `expandedPaths` set"
+      "verification": "component test (`@testing-library/preact` + `jsdom`) covering: error-state renders the inline banner and no view; dispatched `init`/`update` `MessageEvent`s update `viewModel` (an `update` after `init` changes what renders, view mode unchanged); a toggle click switches the rendered view locally and calls the injected `postMessage` exactly once with `{ type: \"viewModeChanged\", viewMode }`; expand-all/collapse-all clicks change the rendered `.tree-node__children` count \u2014 5 tests, all passing"
     },
     {
       "capability_tier": "economical",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -362,7 +372,7 @@
         "src/extension.ts"
       ],
       "id": "5.1",
-      "interfaces": "Consumes: `PanelController.createOrReveal` from 4.1, the `jsonTables.visualize` command id contributed in 1.1; Produces: `activate(context)` as the `package.json` `main` entry point's exported activation function",
+      "interfaces": "Consumes: `PanelController.createOrReveal` from 4.1, the `jsonTables.visualize` command id contributed in 1.1; Produces: `activate(context)` as the [`package.json`](../../package.json) `main` entry point's exported activation function",
       "optional": false,
       "reasoning_level": "low",
       "requirements": [
@@ -374,11 +384,11 @@
       "stage": 5,
       "task_category": "quick_lookup",
       "title": "Implement the command handler and extension activation",
-      "verification": "Extension Development Host manual check \u2014 command runs from both the editor-title button and the Command Palette and opens the panel in both cases"
+      "verification": "`npx tsc --noEmit`, `npm run compile`, and `npm test` (32 tests) all exit 0; confirmed `jsonTables.visualize` appears in the built [`dist/extension.js`](../../dist/extension.js). The Extension Development Host manual check (command runs from the editor-title button and the Command Palette, opens the panel in both cases) requires a live VS Code GUI the execution environment doesn't have \u2014 deferred to task 6.2's human walkthrough, which already covers it."
     },
     {
       "capability_tier": "economical",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -386,10 +396,11 @@
         "4.2"
       ],
       "files": [
-        "src/webview/main.tsx"
+        "src/webview/main.tsx",
+        "src/webview/css.d.ts"
       ],
       "id": "5.2",
-      "interfaces": "Consumes: `App` component from 4.2, `acquireVsCodeApi()` (VS Code webview API); Produces: the `dist/webview/main.js` bundle entry point task 4.1's `panelController.ts` HTML references",
+      "interfaces": "Consumes: `App` component from 4.2, `acquireVsCodeApi()` (VS Code webview API); Produces: the [`dist/webview/main.js`](../../dist/webview/main.js) bundle entry point task 4.1's `panelController.ts` HTML references",
       "optional": false,
       "reasoning_level": "low",
       "requirements": [
@@ -400,11 +411,11 @@
       "stage": 5,
       "task_category": "quick_lookup",
       "title": "Implement the webview entry point",
-      "verification": "Extension Development Host manual check \u2014 panel shows the Tree view (or the last-used mode) immediately on open, with no visible flash of empty content"
+      "verification": "`npx tsc --noEmit`, `npm run compile` (confirmed [`dist/webview/main.js`](../../dist/webview/main.js) and [`dist/webview/main.css`](../../dist/webview/main.css) both contain the expected content), and `npm test` (33 tests) all exit 0. The Extension Development Host manual check (panel shows the Tree view, or the last-used mode, immediately on open) requires a live VS Code GUI the execution environment doesn't have \u2014 deferred to task 6.2's human walkthrough."
     },
     {
       "capability_tier": "frontier",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -428,7 +439,7 @@
       "stage": 6,
       "task_category": "review",
       "title": "Verify the read-only guarantee across the whole codebase",
-      "verification": "the grep above returns no matches, and the manual element inspection confirms no editable element exists in any of the three view components"
+      "verification": "the grep above returns no matches (outside one confirming doc comment), and the manual element inspection confirms no editable element exists in any of the three view components \u2014 **PASS**"
     },
     {
       "capability_tier": "balanced",
@@ -443,8 +454,7 @@
       "files": [
         "README.md",
         "LICENSE",
-        "icon asset (path TBD by author)",
-        "package.json` (add"
+        "media/icon.png"
       ],
       "id": "6.2",
       "interfaces": "Consumes: the completed, compiled extension from tasks 1.1-5.2; Produces: an installable `.vsix` file and a recorded walkthrough result",
@@ -459,7 +469,7 @@
       "stage": 6,
       "task_category": "review",
       "title": "Package the extension and run the end-to-end walkthrough",
-      "verification": "`npx vsce package` exits 0 without a publisher-account error; the installed `.vsix` shows the same editor-title button and panel behavior as the Extension Development Host across every fixture/theme combination above"
+      "verification": "`npx vsce package` exits 0 without a publisher-account error (confirmed); the installed `.vsix` shows the same editor-title button and panel behavior as the Extension Development Host across every fixture/theme combination above (pending human confirmation)"
     }
   ]
 }

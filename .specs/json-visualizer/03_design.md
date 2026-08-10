@@ -1,7 +1,7 @@
 # Design: JSON Visualizer VS Code Extension
 
 <!-- spec-nav:start -->
-**Spec navigation:** [State](00_state.md) · [Discovery](01_discovery.md) · [Requirements](02_requirements.md) · [Design](03_design.md) · [Tasks](04_tasks.md)
+**Spec navigation:** [State](00_state.md) · [Discovery](01_discovery.md) · [Requirements](02_requirements.md) · [Design](03_design.md) · [Tasks](04_tasks.md) · [Execution](05_execution.md)
 <!-- spec-nav:end -->
 
 > [!IMPORTANT]
@@ -75,67 +75,105 @@ wiring.
 - `registerVisualizeCommand(context: vscode.ExtensionContext): vscode.Disposable` — registers
   `jsonTables.visualize`. On invocation, reads `vscode.window.activeTextEditor.document` and
   calls `PanelController.createOrReveal(context, document)`.
-- `package.json` contributes the command and its `editor/title` menu entry with
+- [`package.json`](../../package.json) contributes the command and its `editor/title` menu entry with
   `"when": "resourceLangId == json || resourceLangId == jsonc"` — **R1.1, R1.2**: VS Code itself
   hides/shows the button per the `when` clause, so no runtime polling is needed. `"group":
   "navigation"` places it beside the existing editor-title icons without touching them.
 
 ### `viewModelBuilder.ts`
 
-- `buildViewModel(text: string): ViewModel` — parses `text` with `jsonc-parser`'s `parseTree` and
-  walks the resulting parse tree into the `JsonNode` shape below (see Data Models). If
-  `jsonc-parser` reports any `ParseError`, returns `{ status: "error", message, line, column }`
-  instead of a partial tree — **R2.1, R2.2, R8.1, R8.5**. `line`/`column` come from converting the
-  first error's byte offset via `jsonc-parser`'s own `getLocation`, so the message can point at an
-  exact position rather than "somewhere in the file."
+- `buildViewModel(text: string): ViewModel` — parses `text` with `jsonc-parser`'s `parseTree(text,
+  errors)`, which reports parse failures through the `errors: ParseError[]` array it mutates
+  (not a return value) rather than throwing. If that array is non-empty, returns `{ status:
+  "error", message, line, column }` instead of a partial tree — **R2.1, R2.2, R8.1, R8.5**. Each
+  `ParseError` carries only `{ error, offset, length }` — `jsonc-parser` has no offset-to-position
+  API (`getLocation(text, offset)` answers a different question: which JSON path segment
+  contains that offset, for completion/hover providers, not `{line, column}`). `line`/`column`
+  instead come from a small local helper in this same file that counts `\n` characters in `text`
+  up to the error's `offset`, keeping `buildViewModel` a pure function with no VS Code API
+  dependency.
 - Pure function, no VS Code API dependency — directly unit-testable (see Testing Strategy).
 
-### `panelController.ts`
+### `panelController.ts`, `debounce.ts`, `webviewHtml.ts`
+
+The debounce wrapper and the HTML/CSP template are factored into their own dependency-free
+sibling files rather than defined inside `panelController.ts` itself — the same reason
+`documentWatcher.ts` takes `vscode.workspace` as a parameter rather than importing `vscode` as a
+value: any file that does `import * as vscode from "vscode"` at module scope fails to resolve
+under a plain Node.js test process, so the pieces worth unit-testing (timing behavior, CSP shape)
+have to live where that import never happens.
+
+- `debounce.ts`: `debounce<Args>(fn, ms): (...args: Args) => void` — the standard trailing-edge
+  debounce, generic over its wrapped function's arguments.
+- `webviewHtml.ts`: `generateNonce(): string` (16 bytes from `node:crypto`'s `randomBytes`,
+  base64-encoded — a background security review of the first draft, which used `Math.random()`,
+  flagged it as a weak primitive; `randomBytes` costs nothing extra and removes the ambiguity)
+  and `renderWebviewHtml({ scriptUri, styleUri, nonce }): string`, producing the CSP
+  `default-src 'none'; script-src 'nonce-<nonce>'; style-src 'nonce-<nonce>'` shell with both the
+  nonce'd `<script>` and `<link>` tags.
 
 - `class PanelController` — one instance per visualized `vscode.TextDocument`, keyed by
   `document.uri.toString()` in a module-level `Map` so a second invocation on the same document
   reveals the existing panel instead of creating a duplicate.
   - `static createOrReveal(context, document): void` — looks up or creates a
     `vscode.WebviewPanel` (`enableScripts: true`, `retainContextWhenHidden: true`,
-    `localResourceRoots: [Uri.joinPath(context.extensionUri, "dist", "webview")]`), sets its HTML
-    (CSP `default-src 'none'; script-src 'nonce-<nonce>'; style-src 'nonce-<nonce>'`), and calls
-    `sendInit`. **R1.3, R1.4**: the panel opens in `ViewColumn.Beside`, never replacing the
-    source editor.
+    `localResourceRoots: [Uri.joinPath(context.extensionUri, "dist", "webview")]`) and sets its
+    HTML (CSP `default-src 'none'; script-src 'nonce-<nonce>'; style-src 'nonce-<nonce>'`). It
+    does **not** call `sendInit` itself — assigning `panel.webview.html` triggers an async page
+    load, so a message posted immediately could arrive before `main.tsx` has attached its
+    listener. **R1.3, R1.4**: the panel opens in `ViewColumn.Beside`, never replacing the source
+    editor.
   - `private sendInit(): void` — builds the initial view model, reads
     `context.globalState.get("jsonTables.lastViewMode", "tree")`, and posts
-    `{ type: "init", viewModel, viewMode }`. **R2.1, R6.2, R6.3**.
+    `{ type: "init", viewModel, viewMode }`. Called only from `onWebviewMessage` in response to
+    the webview's own `{ type: "ready" }`, making the handshake deterministic instead of relying
+    on message-delivery timing. **R2.1, R6.2, R6.3**.
   - `private onDocumentChanged(event): void` — subscribed via `documentWatcher.ts`; debounces
     (150 ms) then rebuilds and posts `{ type: "update", viewModel }`. **R8.2, R8.3**.
-  - `private onWebviewMessage(message): void` — handles `{ type: "viewModeChanged", viewMode }`
-    by writing `context.globalState.update("jsonTables.lastViewMode", viewMode)`. **R6.3**.
+  - `private onWebviewMessage(message): void` — handles `{ type: "ready" }` by calling
+    `sendInit()`, and `{ type: "viewModeChanged", viewMode }` by writing
+    `context.globalState.update("jsonTables.lastViewMode", viewMode)`. **R6.2, R6.3**.
   - `dispose(): void` — called from the panel's own `onDidDispose` and from the document watcher
     when the visualized document closes; disposes the change-listener subscription and removes
     the instance from the `Map`. **R8.4**.
 
 ### `documentWatcher.ts`
 
-- `watchDocument(document, onChange, onClose): vscode.Disposable` — thin wrapper composing
-  `vscode.workspace.onDidChangeTextDocument` (filtered to `event.document === document`) and
-  `vscode.workspace.onDidCloseTextDocument` (same filter) into the two callbacks
-  `PanelController` supplies. Kept separate from `PanelController` so the filtering logic is
-  independently testable without a real webview.
+- `watchDocument(workspace, document, onChange, onClose): vscode.Disposable` — thin wrapper
+  composing `workspace.onDidChangeTextDocument` (filtered to `event.document === document`) and
+  `workspace.onDidCloseTextDocument` (same filter) into the two callbacks `PanelController`
+  supplies. `workspace` is the caller-supplied `vscode.workspace` (a `WorkspaceEvents` parameter,
+  not a module-scope `import * as vscode from "vscode"`) precisely so this file never attempts
+  to resolve the real `vscode` module — which only exists inside the Extension Host process, not
+  under a plain Node.js test run — keeping the filtering logic unit-testable with a fake
+  workspace object instead of a mocked module.
 
 ### Webview: `webview/main.tsx`
 
-- Entry point bundled by `esbuild` to `dist/webview/main.js`. Calls `acquireVsCodeApi()`,
+- Entry point bundled by `esbuild` to [`dist/webview/main.js`](../../dist/webview/main.js). Calls `acquireVsCodeApi()`,
   attaches `window.addEventListener("message", ...)` to dispatch incoming `HostMessage`s into
   `App`'s state, and calls `render(<App/>, document.body)` (Preact's `render`). Posts
   `{ type: "ready" }` once mounted.
 
 ### Webview: `App.tsx`
 
-- Holds `viewModel: ViewModel` and `viewMode: ViewMode` in `useState`. Renders:
+- `App({ postMessage })`, where `postMessage: (message: WebviewMessage) => void` is injected by
+  `main.tsx` (wrapping the real `acquireVsCodeApi().postMessage`) rather than called directly —
+  `acquireVsCodeApi` only exists inside a real webview, so injecting it as a prop is what keeps
+  `App` unit-testable with a fake, the same dependency-injection reasoning already applied to
+  `documentWatcher.ts` and `panelController.ts`'s extracted helpers. `App` owns its own
+  `window.addEventListener("message", ...)` internally via a `useEffect` — unlike
+  `acquireVsCodeApi`, `window`'s message event can be simulated directly in a jsdom test by
+  dispatching a real `MessageEvent`, so no injection is needed for the receiving half.
+- Holds `viewModel: ViewModel`, `viewMode: ViewMode`, `expandedPaths: Set<string>`, and Column
+  view's `selectedPath: string[]` in `useState`. Renders:
   - an inline error banner when `viewModel.status === "error"` (**R2.3, R8.5**), instead of the
     selected view;
   - otherwise, a view-mode toggle (`Tree` / `Column` / `Table`) plus the matching renderer
     component, passing `viewModel.root` and a shared `expandedPaths: Set<string>` down to
     `TreeView` so the toggle and any global expand/collapse-all control operate at the `App`
-    level rather than being duplicated per node (**R3.4, R3.5, R3.6, R6.1**).
+    level rather than being duplicated per node (**R3.4, R3.5, R3.6, R6.1**). Expand-all/
+    collapse-all call `TreeView.ts`'s exported `collectExpandablePaths`/`defaultExpandedPaths`.
   - On toggle change, posts `{ type: "viewModeChanged", viewMode }` back to the host (**R6.3**).
 
 ### Webview: `TreeView.tsx`
@@ -159,12 +197,19 @@ wiring.
 
 ### Webview: `TableView.tsx`
 
-- `KeyValueTable({ node })` — for an object node, one row per key (**R5.1**).
+- `KeyValueTable({ node })` — for an object node, one row per key (**R5.1**); also the fallback
+  for a plain array of scalars (falls back to each element's index as the row label), a shape
+  R5.1-R5.3 don't name but that `TableView`'s routing sends here regardless.
 - `ArrayGrid({ node })` — for an array-of-objects node, one row per element, unioned column
   headers across elements (**R5.2**).
 - Both delegate any cell whose value is itself an object/array to a `PreviewBadge` showing
   `"{n}"`/`"[n]"` instead of expanding it inline (**R5.3**) — clicking a badge is out of scope for
   v1 (no drill-in from Table view; Column view already covers drill-down).
+- `TableView({ node })` — the mode-level entry point selecting between `ArrayGrid` (array of
+  objects), `KeyValueTable` (everything else with children), or rendering the value directly for
+  a scalar root (a document whose top-level value is a bare number/string/boolean/null; found
+  during task 6.2's fixture walkthrough — `KeyValueTable` would otherwise render a silently empty
+  table with no visible value at all).
 
 ## Data Models
 
@@ -227,6 +272,8 @@ sequenceDiagram
     participant Webview
     User->>CommandHandler: click "Visualize JSON"
     CommandHandler->>PanelController: createOrReveal(document)
+    PanelController->>Webview: set webview.html (async page load)
+    Webview->>PanelController: postMessage(ready)
     PanelController->>ViewModelBuilder: parse(text)
     ViewModelBuilder-->>PanelController: viewModel
     PanelController->>GlobalState: get lastViewMode
@@ -257,7 +304,7 @@ document, only to `PanelController` for view-mode bookkeeping.
 
 ### Property 1: Command visibility follows resource language
 The "Visualize JSON" editor-title control is visible exactly when the active editor's language
-is `json` or `jsonc`, and hidden otherwise, driven entirely by the `package.json` `when` clause.
+is `json` or `jsonc`, and hidden otherwise, driven entirely by the [`package.json`](../../package.json) `when` clause.
 **Validates: Requirements 1.1, 1.2**
 
 ### Property 2: Invocation opens a side panel without displacing the source
@@ -358,7 +405,7 @@ rendered in the Webview is inside a non-input, non-`contenteditable` element.
 
 ### Property 19: Packaging succeeds without publisher configuration
 `vsce package` (or `@vscode/vsce`'s programmatic API) produces a `.vsix` from this extension's
-`package.json` using only fields that don't require a registered publisher id at package time;
+[`package.json`](../../package.json) using only fields that don't require a registered publisher id at package time;
 installing that `.vsix` activates the same `commandHandler.ts` registration path as the Extension
 Development Host.
 **Validates: Requirements 10.1, 10.2**
@@ -406,7 +453,7 @@ Development Host.
 
 - **Security/authorization:** the Webview's CSP (`default-src 'none'; script-src 'nonce-<nonce>';
   style-src 'nonce-<nonce>'`) blocks any script/style not carrying the per-load nonce, and
-  `localResourceRoots` is scoped to the extension's own `dist/webview` directory, so no remote or
+  `localResourceRoots` is scoped to the extension's own [`dist/webview`](../../dist/webview) directory, so no remote or
   workspace-arbitrary content can load into the panel. There is no authentication/authorization
   surface — the extension only ever reads documents already open in the user's own VS Code
   session. Verification: manual inspection of the generated CSP header in the built HTML.
@@ -439,22 +486,28 @@ Development Host.
 | Technology | Context7 identity/source | Exact selected version | Current-doc question | Decision |
 |---|---|---|---|---|
 | VS Code Extension API | `/websites/code_visualstudio_api` | Extension host targets VS Code `^1.90.0` (Webview/menu APIs used here have been stable since well before this floor) | `editor/title` menu `when`-clause syntax for gating on resource language | Use `"when": "resourceLangId == json \|\| resourceLangId == jsonc"` in `contributes.menus["editor/title"]`, confirmed against the documented `resourceLangId` context key and `||` operator |
+| VS Code Extension API | `/websites/code_visualstudio_api` | — | Whether `activationEvents: []` reliably activates an extension implicitly from `contributes.commands` alone (documented as sufficient since VS Code 1.74) | Real-device testing during task 6.2 found the click-to-activate path failed ("command not found") with an empty `activationEvents` array on the user's installed VS Code. Reverted to an explicit `"activationEvents": ["onCommand:jsonTables.visualize"]` — turned out not to be the actual root cause (see the esbuild row below), but remains correct practice on every VS Code version regardless |
+| esbuild | `/evanw/esbuild` | `0.28.2` | Why `require("./impl/format")` inside a bundled dependency would fail at runtime with "Cannot find module", despite `bundle: true` | Root cause of the "command not found" bug, found by simulating `activate()` locally against the built bundle: esbuild's `platform: "node"` default `mainFields` is `["main"]` only, which resolved `jsonc-parser` to its UMD build (`main`) instead of its ESM build (`module`). That UMD file's factory receives `require` through a renamed parameter, which defeats esbuild's *literal*-`require()`-only static bundling, leaving one inner require call unresolved at runtime. Fixed by setting `mainFields: ["module", "main"]` on the extension's esbuild config, preferring jsonc-parser's real ESM build (ordinary static imports, fully bundleable) |
 | VS Code Extension API | `/websites/code_visualstudio_api` | — | `WebviewPanel` lifecycle: CSP, `localResourceRoots`, `retainContextWhenHidden`, `onDidDispose` cleanup | Confirmed nonce-based CSP pattern, `localResourceRoots` scoping, and the disposal-in-`onDidDispose` pattern used in Components and Interfaces above |
 | VS Code Extension API | `/websites/code_visualstudio_api` | — | Syncing a `TextDocument`'s changes to a webview via `onDidChangeTextDocument`, and the update-loop risk that pattern warns about for editable webviews | Confirmed the documented risk applies only when a webview can itself trigger document edits; this design's Webview never calls `applyEdit`, so no anti-loop guard (e.g. dirty-flag suppression) is needed — see Sequence/Flows note |
-| VS Code theme colors | `/websites/code_visualstudio_api` | — | Availability of `--vscode-*` CSS custom properties and `symbolIcon.*Foreground` theme colors inside a webview | Confirmed `--vscode-editor-foreground`-style variables and the `body.vscode-{light,dark,high-contrast}` classes are injected automatically; confirmed a `symbolIcon` theme-color category exists for per-symbol-kind coloring. The Context7 excerpt did not enumerate every individual `symbolIcon.*Foreground` id (e.g. `nullForeground`, `numberForeground`) verbatim — the exact set is well-established in VS Code's theme-color reference and will be re-verified against `code.visualstudio.com/api/references/theme-color` when `TreeView.tsx` is implemented, before any id is hard-coded |
+| VS Code theme colors | `/websites/code_visualstudio_api`, cross-checked against `microsoft/vscode`'s `src/vs/editor/contrib/symbolIcons/browser/symbolIcons.ts` | — | Availability of `--vscode-*` CSS custom properties and `symbolIcon.*Foreground` theme colors inside a webview | Confirmed `--vscode-editor-foreground`-style variables and the `body.vscode-{light,dark,high-contrast}` classes are injected automatically. Context7's excerpt of the theme-color reference page didn't enumerate every individual `symbolIcon.*Foreground` id verbatim (nor did two direct fetches of the reference page itself — the page appears too long for the fetch tool's summarizer to reach that section); fetching the VS Code source file that registers these colors directly confirmed all six ids task 3.5 uses (`nullForeground`, `booleanForeground`, `numberForeground`, `stringForeground`, `objectForeground`, `arrayForeground`) exist exactly as written, each described as appearing "in the outline, breadcrumb, and suggest widget" |
 | Preact | `/preactjs/preact-www` | `10.29.8` (current npm `latest` at design time) | Hooks-based state (`useState`) and `render()` entry point for a non-SSR webview bundle | Confirmed API matches the `App`/`TreeView`/`ColumnView`/`TableView` component design above; no server-side rendering or routing needed |
 | esbuild | `/evanw/esbuild` | `0.28.2` (current npm `latest` at design time) | Bundling a Preact/JSX entry point (`jsx: "automatic"` or the `h`/`Fragment` pragma) to a single browser-target file for the webview | Confirmed esbuild's `--jsx` and `--jsx-factory`/`--jsx-fragment` (or `jsxImportSource` for automatic mode) options cover Preact's JSX without a separate Babel/TypeScript-JSX toolchain step |
 
 Each row above reflects a library actually consulted through Context7 (`resolve-library-id` then
 `query-docs`) at the identity/source shown, before its corresponding decision was made.
 `jsonc-parser` (Microsoft's own tolerant JSON/JSONC parser, used inside VS Code itself) was not
-found in Context7's index under that name; its `parseTree`/`ParseError`/`getLocation` surface has
-been stable for years and is exercised directly in the fixtures described under Testing Strategy,
-so this design accepts that gap rather than blocking on it.
+found in Context7's index under that name. This design initially misdescribed `getLocation` as an
+offset-to-line/column converter; `plan-harden`'s preflight review caught the error against the
+package's actual `.d.ts` (`getLocation` resolves a JSON path segment at an offset, for
+completion/hover providers — it has no line/column output), so the corrected `viewModelBuilder.ts`
+section above uses a local newline-counting helper instead. `parseTree`'s out-parameter `errors`
+array is otherwise stable and is exercised directly in the fixtures described under Testing
+Strategy.
 
 ## Dependency Security Evidence
 
-No dependency resolution has been applied to a manifest yet: this project has no `package.json`
+No dependency resolution has been applied to a manifest yet: this project has no [`package.json`](../../package.json)
 or lockfile, and the `dependency-security-audit` tool audits *one exact resolved dependency
 snapshot* against an actual manifest+lock, so a real `change`-mode audit cannot run until the
 first task that adds these dependencies creates that manifest. Per the `spec-driven` skill's
@@ -465,7 +518,7 @@ exact versions selected now and an informational (non-project) advisory lookup f
 
 | Dependency / target version | Trigger and mode | Evidence | Result and decision |
 |---|---|---|---|
-| `preact@10.29.8` | dependency selection (this design) / `change` deferred to the task that creates `package.json` | Informational OSV lookup (not a project audit): no matching advisory records for this exact version | Selected; the owning task's `Dependency resolution: change` leaf must run the real pre/post `dependency-security-audit change` audit once the manifest exists |
+| `preact@10.29.8` | dependency selection (this design) / `change` deferred to the task that creates [`package.json`](../../package.json) | Informational OSV lookup (not a project audit): no matching advisory records for this exact version | Selected; the owning task's `Dependency resolution: change` leaf must run the real pre/post `dependency-security-audit change` audit once the manifest exists |
 | `esbuild@0.28.2` | dependency selection (this design) / `change` deferred | Informational OSV lookup: no matching advisory records for this exact version | Selected (build-time only, not shipped in the Webview runtime bundle); same deferred-audit requirement |
 | `jsonc-parser@3.3.1` | dependency selection (this design) / `change` deferred | Informational OSV lookup: no matching advisory records for this exact version | Selected; same deferred-audit requirement |
 

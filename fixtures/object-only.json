@@ -1,0 +1,9 @@
+{
+  "name": "JSON Tables",
+  "version": "0.1.0",
+  "description": "Interactive JSON visualizer for VS Code",
+  "author": "Antigravity",
+  "isExtension": true,
+  "downloads": 42,
+  "repository": null
+}

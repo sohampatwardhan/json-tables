@@ -1,0 +1,64 @@
+{
+  "name": "json-tables",
+  "displayName": "JSON Tables",
+  "description": "Visualize JSON files as an interactive Tree, Column, or Key-Value/Table view, right beside the source editor.",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sohampatwardhan/json-tables.git"
+  },
+  "engines": {
+    "vscode": "^1.125.0"
+  },
+  "main": "./dist/extension.js",
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:jsonTables.visualize"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "jsonTables.visualize",
+        "title": "Visualize JSON",
+        "category": "JSON Tables",
+        "icon": "$(table)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "jsonTables.visualize",
+          "when": "resourceLangId == json || resourceLangId == jsonc",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "node esbuild.config.mjs",
+    "watch": "node esbuild.config.mjs --watch",
+    "test": "node --import tsx --test src/**/*.test.ts src/**/*.test.tsx",
+    "package": "npm run compile -- --production && vsce package"
+  },
+  "dependencies": {
+    "jsonc-parser": "3.3.1",
+    "preact": "10.29.8"
+  },
+  "devDependencies": {
+    "@testing-library/preact": "3.2.4",
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "26.2.0",
+    "@types/vscode": "1.125.0",
+    "@vscode/vsce": "3.9.2",
+    "esbuild": "0.28.2",
+    "jsdom": "30.0.1",
+    "tsx": "4.23.11",
+    "typescript": "7.0.2"
+  }
+}

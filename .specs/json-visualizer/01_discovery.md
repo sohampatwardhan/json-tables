@@ -1,7 +1,7 @@
 # Discovery: JSON Visualizer VS Code Extension
 
 <!-- spec-nav:start -->
-**Spec navigation:** [State](00_state.md) · [Discovery](01_discovery.md) · [Requirements](02_requirements.md) · [Design](03_design.md) · [Tasks](04_tasks.md)
+**Spec navigation:** [State](00_state.md) · [Discovery](01_discovery.md) · [Requirements](02_requirements.md) · [Design](03_design.md) · [Tasks](04_tasks.md) · [Execution](05_execution.md)
 <!-- spec-nav:end -->
 
 ## Problem and Outcome
@@ -44,7 +44,7 @@ view, or a Key-Value/Table view — without leaving the source file or risking a
 - Live refresh: the panel updates when the underlying file changes (edit or external change),
   without requiring the user to reopen it.
 - Packaging structured so a later Marketplace publish is just an account + `vsce publish` away:
-  `package.json` metadata, README, icon, and semantic versioning from `0.1.0`. No VS Code
+  [`package.json`](../../package.json) metadata, README, icon, and semantic versioning from `0.1.0`. No VS Code
   publisher account exists yet; v1 ships as a locally built/installed `.vsix` or via the
   Extension Development Host.
 
@@ -69,7 +69,7 @@ view, or a Key-Value/Table view — without leaving the source file or risking a
 - Must adopt VS Code's own theme variables (`--vscode-*` CSS custom properties) rather than a
   fixed design system, so the visualization matches whatever color theme the user has active —
   a stricter requirement than THRIVE's OS-level `prefers-color-scheme` toggle.
-- Must be structured for a future Marketplace publish (`LICENSE`, `README`, icon, semantic
+- Must be structured for a future Marketplace publish ([`LICENSE`](../../LICENSE), `README`, icon, semantic
   versioning) even though v1 has no publisher account and is installed locally by the author.
 
 **Success measures:**
@@ -138,7 +138,7 @@ block
 
 The three subsystems are independently testable: the extension host owns document access and
 message dispatch; the Webview owns rendering only and never touches the filesystem directly;
-the editor UI's title button is a declarative `package.json` contribution with no logic of its
+the editor UI's title button is a declarative [`package.json`](../../package.json) contribution with no logic of its
 own.
 
 ## Failure and Verification Strategy

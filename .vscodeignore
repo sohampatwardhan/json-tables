@@ -1,0 +1,12 @@
+.specs/**
+src/**
+.security/**
+.git/**
+node_modules/**
+.gitignore
+.vscodeignore
+esbuild.config.mjs
+tsconfig.json
+**/*.test.ts
+**/*.test.tsx
+**/*.map

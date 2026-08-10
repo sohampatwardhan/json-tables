@@ -1,7 +1,7 @@
 # Tasks: JSON Visualizer VS Code Extension
 
 <!-- spec-nav:start -->
-**Spec navigation:** [State](00_state.md) · [Discovery](01_discovery.md) · [Requirements](02_requirements.md) · [Design](03_design.md) · [Tasks](04_tasks.md)
+**Spec navigation:** [State](00_state.md) · [Discovery](01_discovery.md) · [Requirements](02_requirements.md) · [Design](03_design.md) · [Tasks](04_tasks.md) · [Execution](05_execution.md)
 <!-- spec-nav:end -->
 
 > [!WARNING]
@@ -63,60 +63,111 @@ flowchart TD
 All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shared types); Stage
 4 and Stage 5 are each a two-task parallel wave; the two Stage 6 tasks form the final checkpoint.
 
-- [ ] 1. Project Scaffolding
-  - [ ] 1.1 Scaffold the extension project, add its dependencies, and configure its manifest contributions
-    - Create `package.json` (name `json-tables`, `main: "./dist/extension.js"`,
-      `engines.vscode: "^1.90.0"`, `scripts.compile`/`scripts.watch`/`scripts.test`/`scripts.package`),
-      `tsconfig.json` (strict mode, `target: "ES2022"`, `module: "ESNext"`, no emit — esbuild
-      transpiles), and `esbuild.config.mjs` with two build entries: `src/extension.ts` →
-      `dist/extension.js` (platform `node`, external `vscode`) and `src/webview/main.tsx` →
-      `dist/webview/main.js` (platform `browser`, `jsx: "automatic"`, `jsxImportSource:
+- [x] 1. Project Scaffolding
+  - [x] 1.1 Scaffold the extension project, add its dependencies, and configure its manifest contributions
+    - Create [`package.json`](../../package.json) (name `json-tables`, `main: "./dist/extension.js"`,
+      `engines.vscode: "^1.125.0"` — matched to the exact `@types/vscode` version below rather
+      than an arbitrary older floor, since `vsce` rejects `@types/vscode` newer than
+      `engines.vscode` (caught by actually running `vsce ls` during task 1.1),
+      `scripts.compile`/`scripts.watch`/`scripts.test`/`scripts.package`),
+      [`tsconfig.json`](../../tsconfig.json) (strict mode, `target: "ES2022"`, `module: "ESNext"`, no emit — esbuild
+      transpiles), and [`esbuild.config.mjs`](../../esbuild.config.mjs) with two build entries: [`src/extension.ts`](../../src/extension.ts) →
+      [`dist/extension.js`](../../dist/extension.js) (platform `node`, external `vscode`) and [`src/webview/main.tsx`](../../src/webview/main.tsx) →
+      [`dist/webview/main.js`](../../dist/webview/main.js) (platform `browser`, `jsx: "automatic"`, `jsxImportSource:
       "preact"`, minified in `--production`).
     - Add `dependencies`: `preact@10.29.8`, `jsonc-parser@3.3.1`. Add `devDependencies`:
       `esbuild@0.28.2`, `typescript@7.0.2`, `@types/node@26.2.0`, `@types/vscode@1.125.0`,
       `tsx@4.23.11` (runs the `.ts` test files directly under Node's built-in test runner),
       `@vscode/vsce@3.9.2` (packaging CLI for task 6.2 — no publisher account needed to run
-      `vsce package`, only `vsce publish`).
-    - In the same `package.json`, add `contributes.commands` for `jsonTables.visualize`
+      `vsce package`, only `vsce publish`), `@testing-library/preact@3.2.4` and `jsdom@30.0.1`
+      (DOM environment + interaction simulation for the Stage 3/4 webview component tests in
+      tasks 3.2/3.3/4.2, which need real click/pointer-drag simulation that a static
+      `preact-render-to-string` snapshot cannot provide — added after `plan-harden` found this
+      gap between task 1.1's dependency list and what those tasks' own Verification fields
+      require), and `@types/jsdom@30.0.0` (added during task 3.2 once `tsc --noEmit` flagged
+      `jsdom`'s missing type declarations — a second `dependency-security-audit change` pre/post
+      pair covers this addition specifically, project revision `54616684e22d300cb80cfce04a48d24b5d3a97aa`).
+    - Confirm during setup that esbuild's default CSS-import bundling emits a sibling
+      [`dist/webview/main.css`](../../dist/webview/main.css) alongside [`dist/webview/main.js`](../../dist/webview/main.js) when [`src/webview/main.tsx`](../../src/webview/main.tsx)
+      imports `theme.css` (task 5.2) — task 4.1's webview HTML generation links this output.
+    - Also add `license: "MIT"` and `icon: "media/icon.png"` to [`package.json`](../../package.json) now, since this
+      task is the file's sole owner across the plan — task 6.2 creates the referenced [`LICENSE`](../../LICENSE)
+      and [`media/icon.png`](../../media/icon.png) files later without needing to touch [`package.json`](../../package.json) itself (avoids a
+      later task falsely reading as a second dependency-resolution owner of the manifest).
+    - In the same [`package.json`](../../package.json), add `contributes.commands` for `jsonTables.visualize`
       ("Visualize JSON") and `contributes.menus["editor/title"]` with `"when": "resourceLangId
       == json || resourceLangId == jsonc"`, `"group": "navigation"` — the `when`-clause syntax
       confirmed in [`03_design.md`](03_design.md#current-technology-evidence).
-    - Add `.gitignore` (`node_modules/`, `dist/`, `*.vsix`) and `.vscodeignore` (excludes `src/`,
-      [`.specs/`](../../.specs), test files from the packaged `.vsix`).
-    - **Files:** `package.json`, `package-lock.json`, `tsconfig.json`, `esbuild.config.mjs`,
-      `.gitignore`, `.vscodeignore`
+    - **Amended after real-device testing during task 6.2's walkthrough:** the editor-title icon
+      appeared (menu contributions are read at extension discovery, before activation), but
+      clicking it failed with "command 'jsonTables.visualize' not found". First added an explicit
+      `"activationEvents": ["onCommand:jsonTables.visualize"]` (correct practice regardless, since
+      VS Code's "implicit activation from `contributes.commands`" behavior, documented as
+      sufficient since 1.74, didn't reliably fire here) — this did **not** fix it; the user still
+      saw the same error after a full VS Code restart.
+    - **Found the actual root cause by simulating `activate()` locally** against the exact built
+      [`dist/extension.js`](../../dist/extension.js), using a minimal fake `vscode` module on `NODE_PATH` (no VS Code GUI
+      needed for this): `require()`-ing the real bundle threw `Cannot find module
+      './impl/format'` — never even reaching `registerCommand`, which explains "command not
+      found" precisely (it genuinely never got registered). `jsonc-parser`'s `main` field points
+      to a UMD build whose factory receives `require` through a renamed parameter
+      (`n(require, y)` calling into `function(n, e) { ... n("./impl/format") ... }`); esbuild can
+      only statically bundle a literal `require(...)` call, not one reached through a variable,
+      so that inner require was left as an unresolved runtime call — which, once bundled, tried
+      to resolve `./impl/format` relative to [`dist/extension.js`](../../dist/extension.js)'s location, where no such file
+      exists. Fixed in [`esbuild.config.mjs`](../../esbuild.config.mjs) by setting
+      `mainFields: ["module", "main"]` on the extension build, so esbuild prefers jsonc-parser's
+      real ESM build (ordinary static imports, no UMD indirection) instead of `main`. Re-ran the
+      same local simulation after the fix — `activate()` now completes and calls
+      `registerCommand("jsonTables.visualize", ...)` without throwing — then re-verified all 34
+      tests and `tsc --noEmit`, repackaged, and reinstalled. Awaiting the user's confirmation.
+    - Add [`.gitignore`](../../.gitignore) ([`node_modules/`](../../node_modules), [`dist/`](../../dist), `*.vsix`) and [`.vscodeignore`](../../.vscodeignore) (excludes [`src/`](../../src),
+      [`.specs/`](../../.specs), [`node_modules/`](../../node_modules) — esbuild already bundles `preact`/
+      `jsonc-parser` into [`dist/`](../../dist), so shipping [`node_modules`](../../node_modules) too would just bloat the `.vsix` —
+      and test files from the packaged `.vsix`; confirmed with `vsce ls` that the packaged file
+      list is exactly [`package.json`](../../package.json), [`dist/extension.js`](../../dist/extension.js), [`dist/webview/main.js`](../../dist/webview/main.js)).
+    - **Files:** [`package.json`](../../package.json), [`package-lock.json`](../../package-lock.json), [`tsconfig.json`](../../tsconfig.json), [`esbuild.config.mjs`](../../esbuild.config.mjs),
+      [`.gitignore`](../../.gitignore), [`.vscodeignore`](../../.vscodeignore)
     - **Dependency resolution:** change
     - **Dependency delivery:** none
-    - **Context7 evidence:** state=pending | identity=/evanw/esbuild | version=0.28.2 | decision=confirm `--jsx`/`jsxImportSource` bundling flags for Preact per [`03_design.md`](03_design.md#current-technology-evidence) before finalizing `esbuild.config.mjs`
-    - **Pre-change dependency audit:** state=pending | command=`dependency-security-audit change` | expected_json=`.security/dependency-audit/pre-change.json` | expected_markdown=`.security/dependency-audit/pre-change.md` | review=pending
-    - **Resolution edit:** state=pending | expected_files=package.json, package-lock.json
-    - **Project tests:** state=pending | expected_evidence=`npm install && npm run compile` exits 0
-    - **Post-change dependency audit:** state=pending | command=`dependency-security-audit change` | expected_json=`.security/dependency-audit/post-change.json` | expected_markdown=`.security/dependency-audit/post-change.md` | review=pending
+    - **Context7 evidence:** state=completed | identity=/evanw/esbuild | version=0.28.2 | decision=confirmed `jsx: "automatic"` + `jsxImportSource: "preact"` are esbuild's real option names/values for Preact's automatic JSX runtime (landed ≥0.14.51); used in [`esbuild.config.mjs`](../../esbuild.config.mjs)'s webview build config
+    - **Pre-change dependency audit:** state=completed | command=dependency-security-audit change | mode=change | timestamp=2026-08-10T04:04:49.399969Z | project_revision=4f2bc9358162451fbf624d173df199b87152b036 | inventory_fingerprint=8c7c6ec061c7c79294ca928b41cae01171b7cd6d0bd02556fdf1ca54014da338 | json=[.security/dependency-audit/pre-change.json](../../.security/dependency-audit/pre-change.json) | markdown=[.security/dependency-audit/pre-change.md](../../.security/dependency-audit/pre-change.md) | review=completed | result=warnings | exit=0 | decision=baseline run with package.json/package-lock.json/node_modules temporarily removed to capture the genuine pre-install state; 0 findings, "warnings" status is solely partial-inventory (nothing installed) — accepted, no remediation applicable | warnings_reviewed=true | clean=false
+    - **Resolution edit:** state=completed | files=[package.json](../../package.json), [package-lock.json](../../package-lock.json)
+    - **Project tests:** state=completed | evidence=[dist/extension.js](../../dist/extension.js), [dist/webview/main.js](../../dist/webview/main.js)
+    - **Post-change dependency audit:** state=completed | command=dependency-security-audit change | mode=change | timestamp=2026-08-10T04:04:49.644560Z | project_revision=4f2bc9358162451fbf624d173df199b87152b036 | inventory_fingerprint=8897d9d7919117e1b0a883e9bd82a7fc15ebec55d3ce905685a06eafaebeb943 | json=[.security/dependency-audit/post-change.json](../../.security/dependency-audit/post-change.json) | markdown=[.security/dependency-audit/post-change.md](../../.security/dependency-audit/post-change.md) | review=completed | result=warnings | exit=0 | decision=0 blocking/actionable findings; "warnings" status is solely incomplete-inventory for optional platform-specific native binaries (esbuild/typescript/vsce prebuilt variants for platforms not installed here) plus an oversized KEV feed fetch — no remediation applicable, accepted | warnings_reviewed=true | clean=false
     - **Depends on:** none
     - **Stage:** 1
-    - **Interfaces:** Consumes: none (first task in the feature); Produces: `package.json` (npm scripts `compile`, `watch`, `test`, `package`; `jsonTables.visualize` command + `editor/title` menu contribution), `tsconfig.json`, `esbuild.config.mjs` build pipeline producing `dist/extension.js` and `dist/webview/main.js`
+    - **Interfaces:** Consumes: none (first task in the feature); Produces: [`package.json`](../../package.json) (npm scripts `compile`, `watch`, `test`, `package`; `jsonTables.visualize` command + `editor/title` menu contribution), [`tsconfig.json`](../../tsconfig.json), [`esbuild.config.mjs`](../../esbuild.config.mjs) build pipeline producing [`dist/extension.js`](../../dist/extension.js) and [`dist/webview/main.js`](../../dist/webview/main.js)
     - **Documentation:** no public surface (tooling/manifest config only)
-    - **Verification:** `npm install && npm run compile` exits 0 (stub entry files may be empty at this point — the build config itself is what's under test); in the Extension Development Host, opening a `.json` file shows the "Visualize JSON" editor-title icon and opening a `.md` file does not; both pre- and post-change dependency-audit reports reviewed with no unresolved `blocked`/`unavailable`/`invalid` result
+    - **Verification:** `npm install && npm run compile` exits 0 (stub entry files, since the
+      build config itself is what's under test); `npx tsc --noEmit` exits 0; `npm test` runs the
+      empty suite cleanly (0 tests, exit 0); `npx vsce ls` validates the manifest and confirms the
+      packaged file list is exactly [`package.json`](../../package.json), [`dist/extension.js`](../../dist/extension.js), [`dist/webview/main.js`](../../dist/webview/main.js);
+      both pre- and post-change dependency-audit reports reviewed with no unresolved
+      `blocked`/`unavailable`/`invalid` result. The interactive check — opening a `.json` file
+      shows the editor-title icon, a `.md` file does not — requires a live VS Code GUI the
+      execution environment doesn't have; deferred to the human walkthrough in task 6.2, which
+      already covers it.
     - **Estimated effort:** 1.5-2.5 hours
     - **Risk:** medium; first dependency introduction and lockfile creation for the whole project — a bad pin here affects every later task
     - **Task category:** code_analysis
     - **Delegation:** controller
     - _Requirements: 1.1, 1.2, 10.1_
 
-- [ ] 2. Extension-Host Foundations
-  - [ ] 2.1 Define the shared data contract
-    - Create `src/shared/types.ts` with `NodeKind`, `JsonNode`, `ViewModel`, `ViewMode`,
+- [x] 2. Extension-Host Foundations
+  - [x] 2.1 Define the shared data contract
+    - Create [`src/shared/types.ts`](../../src/shared/types.ts) with `NodeKind`, `JsonNode`, `ViewModel`, `ViewMode`,
       `HostMessage`, `WebviewMessage` exactly as specified in
       [`03_design.md`](03_design.md#data-models)'s Data Models diagram, exported for use by both
       the extension host and webview build targets.
-    - **Files:** `src/shared/types.ts`
+    - **Files:** [`src/shared/types.ts`](../../src/shared/types.ts)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 1.1
     - **Stage:** 2
-    - **Interfaces:** Consumes: `tsconfig.json` from 1.1; Produces: `NodeKind`, `JsonNode`,
+    - **Interfaces:** Consumes: [`tsconfig.json`](../../tsconfig.json) from 1.1; Produces: `NodeKind`, `JsonNode`,
       `ViewModel`, `ViewMode`, `HostMessage`, `WebviewMessage` types importable from
-      `src/shared/types.ts`
+      [`src/shared/types.ts`](../../src/shared/types.ts)
     - **Documentation:** exported types get one doc comment each stating the field's role in the
       `postMessage` contract (e.g. why `path: string[]` must stay stable across a refresh)
     - **Verification:** `npx tsc --noEmit` passes with these types imported from a scratch file
@@ -127,21 +178,28 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Delegation:** parallel-safe
     - _Requirements: 2.1_
 
-  - [ ] 2.2 Implement the document change watcher
-    - Create `src/documentWatcher.ts` exporting `watchDocument(document: vscode.TextDocument,
-      onChange: () => void, onClose: () => void): vscode.Disposable`, composing
-      `vscode.workspace.onDidChangeTextDocument` and `vscode.workspace.onDidCloseTextDocument`,
-      each filtered to `event.document === document` before invoking the callback.
-    - **Files:** `src/documentWatcher.ts`
+  - [x] 2.2 Implement the document change watcher
+    - Create [`src/documentWatcher.ts`](../../src/documentWatcher.ts) exporting `watchDocument(workspace: WorkspaceEvents,
+      document: vscode.TextDocument, onChange: () => void, onClose: () => void):
+      vscode.Disposable`, composing `workspace.onDidChangeTextDocument` and
+      `workspace.onDidCloseTextDocument`, each filtered to `event.document === document` before
+      invoking the callback. `workspace` is an explicit parameter (the caller passes
+      `vscode.workspace`) rather than a module-scope `import * as vscode from "vscode"` — the
+      real `vscode` module only resolves inside the Extension Host, so importing it as a value
+      would make this file impossible to unit-test under a plain Node.js test process (found
+      while implementing: Node's `--experimental-test-module-mocks` cannot intercept the `vscode`
+      specifier before `tsx`'s own resolver rejects it first).
+    - **Files:** [`src/documentWatcher.ts`](../../src/documentWatcher.ts)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 1.1
     - **Stage:** 2
-    - **Interfaces:** Consumes: `vscode.TextDocument` (VS Code API); Produces:
-      `watchDocument(document, onChange, onClose): vscode.Disposable`, consumed by task 4.1
+    - **Interfaces:** Consumes: `vscode.TextDocument` (VS Code API), `vscode.workspace`, passed by
+      the caller; Produces: `watchDocument(workspace, document, onChange, onClose):
+      vscode.Disposable`, consumed by task 4.1
     - **Documentation:** one doc comment on `watchDocument` stating the filtering contract and
       why disposal (not just ignoring callbacks) is required
-    - **Verification:** unit test (`src/documentWatcher.test.ts`, run via `npm test`) with a fake
+    - **Verification:** unit test ([`src/documentWatcher.test.ts`](../../src/documentWatcher.test.ts), run via `npm test`) with a fake
       event emitter asserting `onChange`/`onClose` fire only for the matching document and never
       after `dispose()`
     - **Estimated effort:** 45-60 minutes
@@ -150,27 +208,33 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Delegation:** parallel-safe
     - _Requirements: 8.1, 8.4_
 
-- [ ] 3. Core Rendering and Parsing Logic
-  - [ ] 3.1 Implement the View Model Builder
-    - Create `src/viewModelBuilder.ts` exporting `buildViewModel(text: string): ViewModel`.
-      Consult the Current Technology Evidence entry for `jsonc-parser`'s stability note in
-      [`03_design.md`](03_design.md#current-technology-evidence) before finalizing the exact
-      `parseTree`/`ParseError`/`getLocation` calls (its API wasn't in Context7's index).
-    - Walk `jsonc-parser`'s parse tree into `JsonNode`s (`kind`, `key`/`index`, `value`,
-      `children`, `path` built as each node's key/index chain).
-    - If `parseTree` reports any `errors`, or the document is empty/whitespace-only, return
-      `{ status: "error", message, line, column }` via `getLocation` instead of any partial tree.
-    - **Files:** `src/viewModelBuilder.ts`
+- [x] 3. Core Rendering and Parsing Logic
+  - [x] 3.1 Implement the View Model Builder
+    - Create [`src/viewModelBuilder.ts`](../../src/viewModelBuilder.ts) exporting `buildViewModel(text: string): ViewModel`.
+      Consult the Current Technology Evidence entry for `jsonc-parser`'s corrected API note in
+      [`03_design.md`](03_design.md#current-technology-evidence) before writing the parse call
+      (its API wasn't in Context7's index, and an earlier draft of this design misdescribed
+      `getLocation` — do not use it for line/column).
+    - Call `parseTree(text, errors)` (errors is an out-parameter array you pass in and
+      `jsonc-parser` mutates — it is not the function's return value) and walk the returned
+      `Node` tree into `JsonNode`s (`kind`, `key`/`index`, `value`, `children`, `path` built as
+      each node's key/index chain).
+    - If the `errors` array is non-empty after the call, or the document is empty/whitespace-only,
+      return `{ status: "error", message, line, column }` instead of any partial tree. Derive
+      `line`/`column` from the first error's `offset` with a small local helper that counts `\n`
+      characters in `text` up to that offset — not `jsonc-parser`'s `getLocation` (which resolves
+      a JSON path segment at an offset, for completion/hover providers, and has no line/column
+      output).
+    - **Files:** [`src/viewModelBuilder.ts`](../../src/viewModelBuilder.ts)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 2.1
     - **Stage:** 3
-    - **Interfaces:** Consumes: `JsonNode`/`ViewModel`/`NodeKind` types from 2.1,
-      `jsonc-parser`'s `parseTree`/`getLocation`; Produces: `buildViewModel(text): ViewModel`,
-      consumed by task 4.1
+    - **Interfaces:** Consumes: `JsonNode`/`ViewModel`/`NodeKind` types from 2.1, `jsonc-parser`'s
+      `parseTree`; Produces: `buildViewModel(text): ViewModel`, consumed by task 4.1
     - **Documentation:** doc comment on `buildViewModel` stating its error-vs-tree contract (never
       returns a partial tree alongside errors)
-    - **Verification:** unit tests (`src/viewModelBuilder.test.ts`) covering an object, an array
+    - **Verification:** unit tests ([`src/viewModelBuilder.test.ts`](../../src/viewModelBuilder.test.ts)) covering an object, an array
       of scalars, an array of objects, nesting past depth 2, an empty document, and malformed
       inputs (unterminated string, truncated document), asserting both the `JsonNode` shape and
       the error branch's `message`/`line`/`column`
@@ -180,41 +244,58 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Delegation:** parallel-safe
     - _Requirements: 2.1, 2.2_
 
-  - [ ] 3.2 Implement the Tree View component
-    - Create `src/webview/TreeView.tsx` exporting a recursive `TreeNode({ node, path, depth,
+  - [x] 3.2 Implement the Tree View component
+    - Create [`src/webview/TreeView.tsx`](../../src/webview/TreeView.tsx) exporting a recursive `TreeNode({ node, path, depth,
       expandedPaths, onToggle })` Preact component: chevron + key/index + `{n}`/`[n]` child-count
       header for object/array nodes; leaf values render with a `data-kind={node.kind}` attribute.
     - Nodes with `path.length < 2` are treated as expanded by default when `expandedPaths` has no
       entry for them yet; `depth >= 2` nodes are treated as collapsed by default. Clicking a
       chevron calls `onToggle(path)`, which the caller (task 4.2) uses to flip only that path's
       membership in `expandedPaths`.
-    - **Files:** `src/webview/TreeView.tsx`
-    - **Dependency resolution:** none
+    - While writing this task's test, `tsc --noEmit` flagged that `jsdom` ships no type
+      declarations of its own; added `@types/jsdom@30.0.0` as a devDependency (a second,
+      narrower `dependency-security-audit change` pre/post pair, since this task now also
+      touches [`package.json`](../../package.json)/[`package-lock.json`](../../package-lock.json)).
+    - **Files:** [`src/webview/TreeView.tsx`](../../src/webview/TreeView.tsx), [`src/webview/TreeView.test.tsx`](../../src/webview/TreeView.test.tsx), [`src/webview/testSetup.ts`](../../src/webview/testSetup.ts), [`package.json`](../../package.json), [`package-lock.json`](../../package-lock.json)
+    - **Dependency resolution:** change
     - **Dependency delivery:** none
+    - **Context7 evidence:** state=completed | identity=/preactjs/preact-www | version=10.29.8 | decision=confirmed `@testing-library/preact`'s `render`/`fireEvent`/`cleanup` operate on Preact's real DOM output, consistent with the hooks-based component design in [`03_design.md`](03_design.md#current-technology-evidence)
+    - **Pre-change dependency audit:** state=completed | command=dependency-security-audit change | mode=change | timestamp=2026-08-10T04:23:13.210016Z | project_revision=54616684e22d300cb80cfce04a48d24b5d3a97aa | inventory_fingerprint=9092820c61ec68739ac96ffda6753921024499792da89801c26e7c4c75759663 | json=[.security/dependency-audit/pre-change-2.json](../../.security/dependency-audit/pre-change-2.json) | markdown=[.security/dependency-audit/pre-change-2.md](../../.security/dependency-audit/pre-change-2.md) | review=completed | result=warnings | exit=0 | decision=baseline captured with the manifest reverted to the last committed state (before `@types/jsdom`); 0 findings, "warnings" is solely partial-inventory — accepted | warnings_reviewed=true | clean=false
+    - **Resolution edit:** state=completed | files=[package.json](../../package.json), [package-lock.json](../../package-lock.json)
+    - **Project tests:** state=completed | evidence=[src/webview/TreeView.test.tsx](../../src/webview/TreeView.test.tsx)
+    - **Post-change dependency audit:** state=completed | command=dependency-security-audit change | mode=change | timestamp=2026-08-10T04:23:28.284064Z | project_revision=54616684e22d300cb80cfce04a48d24b5d3a97aa | inventory_fingerprint=8d788f64cb6127b42a22059de3661719fd0f25a9f27e9a5db9d5a27e11eceb6f | json=[.security/dependency-audit/post-change-2.json](../../.security/dependency-audit/post-change-2.json) | markdown=[.security/dependency-audit/post-change-2.md](../../.security/dependency-audit/post-change-2.md) | review=completed | result=warnings | exit=0 | decision=0 blocking/actionable findings; "warnings" is solely incomplete-inventory for optional platform-specific native binaries — accepted | warnings_reviewed=true | clean=false
     - **Depends on:** 2.1
     - **Stage:** 3
-    - **Interfaces:** Consumes: `JsonNode` type from 2.1; Produces: `TreeNode` component with the
-      props above, consumed by task 4.2's `App`
-    - **Documentation:** doc comment on `TreeNode` stating the depth-2 default-expansion rule and
-      that `expandedPaths` is owned by the caller, not local state
-    - **Verification:** component test (`src/webview/TreeView.test.tsx` via
-      `preact-render-to-string`) asserting depth-2 default expansion, independent per-node
-      toggling, and the `data-kind` attribute per value type
+    - **Interfaces:** Consumes: `JsonNode` type from 2.1; Produces: `TreeNode`,
+      `defaultExpandedPaths`, `pathKey`, `collectExpandablePaths` from
+      [`src/webview/TreeView.tsx`](../../src/webview/TreeView.tsx), consumed by task 4.2's `App`
+    - **Documentation:** doc comment on `TreeNode` stating that `expandedPaths` is owned by the
+      caller, not local state, and on `defaultExpandedPaths` stating the depth-2 default-expansion
+      rule and that it is the one place that default is computed
+    - **Verification:** component test ([`src/webview/TreeView.test.tsx`](../../src/webview/TreeView.test.tsx) via
+      `@testing-library/preact` against a `jsdom` environment) asserting `defaultExpandedPaths`
+      includes every depth-`<2` object/array node and excludes deeper ones, independent per-node
+      toggling via simulated clicks, and the `data-kind` attribute per value type — 4 tests, all
+      passing; `npx tsc --noEmit` and `npm run compile` both exit 0
     - **Estimated effort:** 2-3 hours
     - **Risk:** low
     - **Task category:** code_analysis
     - **Delegation:** parallel-safe
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.7_
 
-  - [ ] 3.3 Implement the Column View component
-    - Create `src/webview/ColumnView.tsx` exporting `ColumnView({ root, selectedPath,
+  - [x] 3.3 Implement the Column View component
+    - Create [`src/webview/ColumnView.tsx`](../../src/webview/ColumnView.tsx) exporting `ColumnView({ root, selectedPath,
       onSelectPath })`: one `Column` per segment of `selectedPath` (plus the root), each listing
-      its node's entries. Selecting an object/array entry calls `onSelectPath([...selectedPath,
-      key])`; selecting a scalar entry sets a local `detailValue` shown in the rightmost detail
-      pane instead of extending `selectedPath`.
+      its node's entries. Selecting an object/array entry in the column at index `i` calls
+      `onSelectPath([...selectedPath.slice(0, i), key])` — truncating from that column forward
+      before appending, so selecting in an earlier column (while later columns are still shown)
+      replaces the stale drill-down instead of appending past it; for the common case of
+      selecting in the last column this is equivalent to a plain append. Selecting a scalar
+      entry sets a local `detailValue` shown in the rightmost detail pane instead of extending
+      `selectedPath`.
     - Each `Column` tracks its own pixel width in local state, adjusted by a `pointermove`
       handler on a resize handle at its right edge.
-    - **Files:** `src/webview/ColumnView.tsx`
+    - **Files:** [`src/webview/ColumnView.tsx`](../../src/webview/ColumnView.tsx), [`src/webview/ColumnView.test.tsx`](../../src/webview/ColumnView.test.tsx)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 2.1
@@ -223,22 +304,34 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       consumed by task 4.2's `App`
     - **Documentation:** doc comment on `ColumnView` stating why scalar selection never extends
       `selectedPath` (mutual exclusivity with the detail pane)
-    - **Verification:** component test asserting drill-down appends exactly one column per
-      object/array selection, scalar selection never appends a column, and a resize drag updates
-      only the dragged column's width
+    - **Verification:** component test (`@testing-library/preact` + `jsdom`) asserting drill-down
+      appends exactly one column per object/array selection, scalar selection never appends a
+      column, and a simulated `pointerdown`/`pointermove`/`pointerup` drag sequence updates only
+      the dragged column's width
     - **Estimated effort:** 2-3 hours
     - **Risk:** medium; the only component with pointer-drag interaction
     - **Task category:** code_analysis
     - **Delegation:** parallel-safe
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-  - [ ] 3.4 Implement the Key-Value/Table View component
-    - Create `src/webview/TableView.tsx` exporting `KeyValueTable({ node })` (one row per key for
+  - [x] 3.4 Implement the Key-Value/Table View component
+    - Create [`src/webview/TableView.tsx`](../../src/webview/TableView.tsx) exporting `KeyValueTable({ node })` (one row per key for
       an object node) and `ArrayGrid({ node })` (one row per element, column headers unioned
-      across elements, for an array-of-objects node).
+      across elements, for an array-of-objects node). A top-level `TableView({ node })` picks
+      between them (array-of-objects → `ArrayGrid`, everything else → `KeyValueTable`).
+    - `KeyValueTable` also handles a plain array of scalars (falling back to each element's index
+      as the row label) — a case R5.1-R5.3 don't explicitly name but that `TableView`'s
+      not-array-of-objects branch routes here regardless, so it needed a defined behavior rather
+      than crashing on a missing `key`.
     - Any cell whose value is itself an object/array renders a `PreviewBadge` (`"{n}"`/`"[n]"`)
       instead of the nested content.
-    - **Files:** `src/webview/TableView.tsx`
+    - **Amended during task 6.2's fixture preparation:** a scalar-root document (bare
+      `number`/`string`/`boolean`/`null` at the top level, e.g. the `scalar-only.json` fixture)
+      rendered a silently empty `<table>` in Table view with no visible value at all —
+      `KeyValueTable`/`ArrayGrid` both iterate `node.children`, which a scalar root never has.
+      `TableView` now renders the value directly (via the existing `Cell` component) for any node
+      that isn't an object/array, before routing to either table renderer.
+    - **Files:** [`src/webview/TableView.tsx`](../../src/webview/TableView.tsx), [`src/webview/TableView.test.tsx`](../../src/webview/TableView.test.tsx)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 2.1
@@ -248,23 +341,25 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Documentation:** doc comment stating the object-vs-array-of-objects row-shape contract and
       why nested values always render as a badge, never inline
     - **Verification:** component test covering a plain object, an array of objects with
-      heterogeneous keys (union headers), and a nested object/array cell rendering as a badge
+      heterogeneous keys (union headers), a nested object/array cell rendering as a badge, a
+      plain array of scalars, and (added post-fix) a scalar-root document — 5 tests, all passing
     - **Estimated effort:** 2-3 hours
     - **Risk:** low
     - **Task category:** code_analysis
     - **Delegation:** parallel-safe
     - _Requirements: 5.1, 5.2, 5.3_
 
-  - [ ] 3.5 Implement the theme stylesheet
-    - Create `src/webview/theme.css` mapping each `NodeKind` value to a
-      `--vscode-symbolIcon-*Foreground` variable (verify the exact per-kind id, e.g.
-      `symbolIcon.nullForeground`/`numberForeground`/`stringForeground`/`booleanForeground`,
-      against `code.visualstudio.com/api/references/theme-color` as flagged in
-      [`03_design.md`](03_design.md#current-technology-evidence), since Context7 confirmed the
-      `symbolIcon` category but not every individual id verbatim). Every other rule (background,
-      border, general foreground) resolves through a `--vscode-editor-*`/`--vscode-panel-*`
-      variable — no rule may set a literal color value.
-    - **Files:** `src/webview/theme.css`
+  - [x] 3.5 Implement the theme stylesheet
+    - Create [`src/webview/theme.css`](../../src/webview/theme.css) mapping each `NodeKind` value to a
+      `--vscode-symbolIcon-*Foreground` variable. The exact per-kind ids
+      (`symbolIcon.nullForeground`/`booleanForeground`/`numberForeground`/`stringForeground`/
+      `objectForeground`/`arrayForeground`) were confirmed against VS Code's own
+      `symbolIcons.ts` source (Context7's excerpt of the theme-color reference page, and two
+      direct fetches of that page, didn't surface this section — the page is too long for the
+      fetch tool's summarizer). Every other rule (background, border, general foreground)
+      resolves through a `--vscode-editor-*`/`--vscode-panel-*`/`--vscode-list-*` variable — no
+      rule sets a literal color value (confirmed by grep).
+    - **Files:** [`src/webview/theme.css`](../../src/webview/theme.css)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 2.1
@@ -284,26 +379,45 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Delegation:** parallel-safe
     - _Requirements: 3.7, 7.1, 7.2_
 
-- [ ] 4. Orchestration
-  - [ ] 4.1 Implement the Webview Panel Controller
-    - Create `src/panelController.ts` exporting `class PanelController` (module-level `Map<string,
+- [x] 4. Orchestration
+  - [x] 4.1 Implement the Webview Panel Controller
+    - Create [`src/debounce.ts`](../../src/debounce.ts) (`debounce(fn, ms)`) and [`src/webviewHtml.ts`](../../src/webviewHtml.ts)
+      (`generateNonce()`, `renderWebviewHtml({ scriptUri, styleUri, nonce })`) as dependency-free
+      sibling files — same reason as task 2.2's `WorkspaceEvents` parameter: any file importing
+      `vscode` as a value fails to resolve under a plain Node.js test process, so the pieces
+      worth unit-testing (debounce timing, CSP shape) have to live where that import never
+      happens.
+    - Create [`src/panelController.ts`](../../src/panelController.ts) exporting `class PanelController` (module-level `Map<string,
       PanelController>` keyed by `document.uri.toString()`):
       `static createOrReveal(context, document)`, `private sendInit()`, `private
-      onDocumentChanged()` (150 ms debounce), `private onWebviewMessage(message)`, `dispose()`.
+      onDocumentChanged()` (calls the 150 ms `debounce` wrapper from `debounce.ts`), `private
+      onWebviewMessage(message)`, `dispose()`.
     - `createOrReveal` creates the panel in `vscode.ViewColumn.Beside` with `enableScripts: true`,
       `retainContextWhenHidden: true`, `localResourceRoots: [Uri.joinPath(context.extensionUri,
       "dist", "webview")]`, and HTML with a nonce-based CSP (`default-src 'none'; script-src
       'nonce-<nonce>'; style-src 'nonce-<nonce>'`) — confirm this exact pattern against
       [`03_design.md`](03_design.md#current-technology-evidence) before writing it.
+    - The generated HTML must convert both [`dist/webview/main.js`](../../dist/webview/main.js) and its sibling
+      [`dist/webview/main.css`](../../dist/webview/main.css) (esbuild's default output for `main.tsx`'s `theme.css` import, per
+      task 1.1) through `panel.webview.asWebviewUri(Uri.joinPath(context.extensionUri, "dist",
+      "webview", ...))` — `localResourceRoots` only whitelists the directory, it does not itself
+      rewrite paths — and reference the CSS via a nonce-carrying `<link rel="stylesheet"
+      nonce="<nonce>" href="...">` tag alongside the nonce'd `<script>` tag. Under `default-src
+      'none'`, any stylesheet not wired in this way is silently dropped, breaking the
+      theme-driven coloring properties (found by `plan-harden`'s preflight review).
     - `sendInit` calls `buildViewModel`, reads `context.globalState.get("jsonTables.lastViewMode",
-      "tree")`, and posts `{ type: "init", viewModel, viewMode }`.
+      "tree")`, and posts `{ type: "init", viewModel, viewMode }` — called only from
+      `onWebviewMessage` on `{ type: "ready" }`, never eagerly from `createOrReveal` itself, since
+      `panel.webview.html` assignment triggers an async page load and a message posted before
+      then could arrive before task 5.2's `main.tsx` has attached its listener.
     - `onDocumentChanged` (wired through task 2.2's `watchDocument`) rebuilds via
       `buildViewModel` and posts `{ type: "update", viewModel }`.
-    - `onWebviewMessage` handles `{ type: "viewModeChanged", viewMode }` by writing
+    - `onWebviewMessage` handles `{ type: "ready" }` by calling `sendInit()`, and
+      `{ type: "viewModeChanged", viewMode }` by writing
       `context.globalState.update("jsonTables.lastViewMode", viewMode)`.
     - `dispose()` — called from the panel's own `onDidDispose` and from `watchDocument`'s
       `onClose` — disposes the watcher subscription and removes the map entry.
-    - **Files:** `src/panelController.ts`
+    - **Files:** [`src/panelController.ts`](../../src/panelController.ts), [`src/debounce.ts`](../../src/debounce.ts), [`src/webviewHtml.ts`](../../src/webviewHtml.ts), [`src/panelController.test.ts`](../../src/panelController.test.ts)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 3.1, 2.2
@@ -313,30 +427,39 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       `PanelController.createOrReveal(context, document): void`, consumed by task 5.1
     - **Documentation:** doc comments on the class and each public method stating the lifecycle
       contract (one instance per document, disposal ordering, why the panel is never in
-      `ViewColumn.Active`)
-    - **Verification:** unit test for the 150 ms debounce using fake timers (one `buildViewModel`
-      call per burst, not per keystroke); manual Extension Development Host check that a second
-      invocation on the same document reveals rather than duplicates the panel, and that the
-      CSP header is present in the rendered HTML
+      `ViewColumn.Active`); doc comments on `debounce`/`generateNonce`/`renderWebviewHtml`
+      explaining why they're dependency-free siblings rather than inline in `panelController.ts`
+    - **Verification:** unit tests (`debounce` via `node:test`'s `mock.timers` — one trailing
+      call per burst, a fresh call after settling fires again; `renderWebviewHtml` — the CSP
+      meta tag's nonce matches the `<script>`/`<link>` tags' nonces, `default-src 'none'` is
+      present, URIs are embedded verbatim) — 4 tests, all passing; `npx tsc --noEmit` and
+      `npm run compile` both exit 0. Manual Extension Development Host check (deferred to task
+      6.2's walkthrough, no GUI in this environment): a second invocation on the same document
+      reveals rather than duplicates the panel.
     - **Estimated effort:** 3-4 hours
     - **Risk:** high; central orchestration module, and CSP correctness is a security property
     - **Task category:** heavy_reasoning
     - **Delegation:** parallel-safe
     - _Requirements: 1.3, 1.4, 2.1, 6.2, 6.3, 8.1, 8.2, 8.4_
 
-  - [ ] 4.2 Implement the App root component
-    - Create `src/webview/App.tsx` exporting `App`: holds `viewModel: ViewModel`, `viewMode:
-      ViewMode`, and `expandedPaths: Set<string>` in `useState`.
+  - [x] 4.2 Implement the App root component
+    - Create [`src/webview/App.tsx`](../../src/webview/App.tsx) exporting `App({ postMessage })`: holds `viewModel:
+      ViewModel`, `viewMode: ViewMode`, `expandedPaths: Set<string>`, and Column view's
+      `selectedPath: string[]` in `useState`. `postMessage` is injected by task 5.2's `main.tsx`
+      (wrapping `acquireVsCodeApi().postMessage`) rather than called directly, so this component
+      stays unit-testable with a fake — `acquireVsCodeApi` only exists in a real webview.
     - Renders an inline error banner (message + line/column) when `viewModel.status === "error"`,
       in place of the selected view.
     - Otherwise renders the Tree/Column/Table toggle plus the matching component from 3.2/3.3/3.4,
       passing `expandedPaths` and toggle callbacks down to `TreeView`.
-    - Expand-all/collapse-all buttons fill or clear `expandedPaths` with every object/array path
-      in the current tree.
-    - Listens for `window.addEventListener("message", ...)` dispatching incoming `HostMessage`s
-      (`init`/`update`) into state; posts `{ type: "viewModeChanged", viewMode }` when the toggle
+    - Expand-all/collapse-all buttons fill or clear `expandedPaths` using `TreeView.tsx`'s
+      exported `collectExpandablePaths`.
+    - Owns its own `window.addEventListener("message", ...)` (via `useEffect`) dispatching
+      incoming `HostMessage`s (`init`/`update`) into state — this half doesn't need injection
+      since a jsdom test can dispatch a real `MessageEvent` directly; posts
+      `{ type: "viewModeChanged", viewMode }` via the injected `postMessage` when the toggle
       changes.
-    - **Files:** `src/webview/App.tsx`
+    - **Files:** [`src/webview/App.tsx`](../../src/webview/App.tsx), [`src/webview/App.test.tsx`](../../src/webview/App.test.tsx)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 3.2, 3.3, 3.4, 3.5
@@ -346,57 +469,73 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       types from 2.1; Produces: `App` component, mounted by task 5.2's `main.tsx`
     - **Documentation:** doc comment on `App` stating the message-handling contract (which
       incoming `type`s it accepts, which outgoing `type`s it emits)
-    - **Verification:** component test covering: error-state renders the inline banner and no
-      view; `init`/`update` messages update `viewModel`; toggling view mode re-renders without
-      re-requesting data; expand-all/collapse-all mutate the full `expandedPaths` set
+    - **Verification:** component test (`@testing-library/preact` + `jsdom`) covering: error-state
+      renders the inline banner and no view; dispatched `init`/`update` `MessageEvent`s update
+      `viewModel` (an `update` after `init` changes what renders, view mode unchanged); a toggle
+      click switches the rendered view locally and calls the injected `postMessage` exactly once
+      with `{ type: "viewModeChanged", viewMode }`; expand-all/collapse-all clicks change the
+      rendered `.tree-node__children` count — 5 tests, all passing
     - **Estimated effort:** 2-3 hours
     - **Risk:** medium; composes every other webview component and owns all client-side state
     - **Task category:** code_analysis
     - **Delegation:** parallel-safe
     - _Requirements: 2.3, 3.5, 3.6, 6.1, 6.3, 8.3, 8.5, 9.1_
 
-- [ ] 5. Wiring
-  - [ ] 5.1 Implement the command handler and extension activation
-    - Create `src/commandHandler.ts` exporting `registerVisualizeCommand(context):
+- [x] 5. Wiring
+  - [x] 5.1 Implement the command handler and extension activation
+    - Create [`src/commandHandler.ts`](../../src/commandHandler.ts) exporting `registerVisualizeCommand(context):
       vscode.Disposable`, registering `jsonTables.visualize` (id from task 1.1's manifest entry);
       on invocation, reads `vscode.window.activeTextEditor?.document` and, if present, calls
       `PanelController.createOrReveal(context, document)`.
-    - Create `src/extension.ts` exporting `activate(context)`, calling
+    - Create [`src/extension.ts`](../../src/extension.ts) exporting `activate(context)`, calling
       `context.subscriptions.push(registerVisualizeCommand(context))`.
-    - **Files:** `src/commandHandler.ts`, `src/extension.ts`
+    - **Files:** [`src/commandHandler.ts`](../../src/commandHandler.ts), [`src/extension.ts`](../../src/extension.ts)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 4.1
     - **Stage:** 5
     - **Interfaces:** Consumes: `PanelController.createOrReveal` from 4.1, the
       `jsonTables.visualize` command id contributed in 1.1; Produces: `activate(context)` as the
-      `package.json` `main` entry point's exported activation function
+      [`package.json`](../../package.json) `main` entry point's exported activation function
     - **Documentation:** doc comment on `activate` and `registerVisualizeCommand` stating the
       activation contract (idempotent registration, no-op when there is no active editor)
-    - **Verification:** Extension Development Host manual check — command runs from both the
-      editor-title button and the Command Palette and opens the panel in both cases
+    - **Verification:** `npx tsc --noEmit`, `npm run compile`, and `npm test` (32 tests) all exit
+      0; confirmed `jsonTables.visualize` appears in the built [`dist/extension.js`](../../dist/extension.js). The Extension
+      Development Host manual check (command runs from the editor-title button and the Command
+      Palette, opens the panel in both cases) requires a live VS Code GUI the execution
+      environment doesn't have — deferred to task 6.2's human walkthrough, which already covers
+      it.
     - **Estimated effort:** 45-60 minutes
     - **Risk:** low
     - **Task category:** quick_lookup
     - **Delegation:** parallel-safe
     - _Requirements: 1.3, 10.2_
 
-  - [ ] 5.2 Implement the webview entry point
-    - Create `src/webview/main.tsx`: calls `acquireVsCodeApi()`, imports `theme.css`, attaches
-      `window.addEventListener("message", ...)` before mount so no early `init` message is
-      missed, calls Preact's `render(<App/>, document.body)`, then posts `{ type: "ready" }`.
-    - **Files:** `src/webview/main.tsx`
+  - [x] 5.2 Implement the webview entry point
+    - Create [`src/webview/main.tsx`](../../src/webview/main.tsx): calls `acquireVsCodeApi()`,
+      imports `theme.css` (a side-effect import — needs `declare module "*.css"` in a small
+      `css.d.ts` ambient declaration for `tsc` to accept it; esbuild already bundles it into a
+      sibling [`dist/webview/main.css`](../../dist/webview/main.css), confirmed by inspecting the actual build output), calls
+      Preact's `render(<App postMessage={...}/>, document.body)`, then posts
+      `{ type: "ready" }`. `App` (not `main.tsx`) owns the `window.addEventListener("message",
+      ...)` listener via its own `useEffect`; task 4.1's `PanelController` now waits for this
+      `ready` message before ever sending `init` (a design correction — see 4.1's updated
+      `onWebviewMessage`), so there's no early-message race to guard against here.
+    - **Files:** [`src/webview/main.tsx`](../../src/webview/main.tsx), [`src/webview/css.d.ts`](../../src/webview/css.d.ts)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 4.2
     - **Stage:** 5
     - **Interfaces:** Consumes: `App` component from 4.2, `acquireVsCodeApi()` (VS Code webview
-      API); Produces: the `dist/webview/main.js` bundle entry point task 4.1's `panelController.ts`
+      API); Produces: the [`dist/webview/main.js`](../../dist/webview/main.js) bundle entry point task 4.1's `panelController.ts`
       HTML references
-    - **Documentation:** doc comment stating why the message listener attaches before `render`
-      (so a fast `init` message from the host is never dropped)
-    - **Verification:** Extension Development Host manual check — panel shows the Tree view (or
-      the last-used mode) immediately on open, with no visible flash of empty content
+    - **Documentation:** doc comment stating the `ready`-before-`init` ordering guarantee and why
+      `App` (not this file) owns the message listener
+    - **Verification:** `npx tsc --noEmit`, `npm run compile` (confirmed [`dist/webview/main.js`](../../dist/webview/main.js)
+      and [`dist/webview/main.css`](../../dist/webview/main.css) both contain the expected content), and `npm test` (33 tests)
+      all exit 0. The Extension Development Host manual check (panel shows the Tree view, or the
+      last-used mode, immediately on open) requires a live VS Code GUI the execution environment
+      doesn't have — deferred to task 6.2's human walkthrough.
     - **Estimated effort:** 30-45 minutes
     - **Risk:** low
     - **Task category:** quick_lookup
@@ -404,12 +543,18 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - _Requirements: 6.2_
 
 - [ ] 6. Checkpoint — feature complete, ready for personal-use packaging
-  - [ ] 6.1 Verify the read-only guarantee across the whole codebase
-    - Grep `src/` for `applyEdit`, `TextEditor.edit`, `WorkspaceEdit`, and `contenteditable`;
-      confirm zero matches outside of comments/tests.
-    - Manually inspect every rendered value site in `TreeView.tsx`, `ColumnView.tsx`, and
-      `TableView.tsx` to confirm none is an `<input>`, `<textarea>`, or `contenteditable`
-      element.
+  - [x] 6.1 Verify the read-only guarantee across the whole codebase
+    - Grep [`src/`](../../src) for `applyEdit`, `TextEditor.edit`, `WorkspaceEdit`, and `contenteditable`
+      (case-insensitive, also covering `contentEditable`, `<input`, `<textarea`); confirm zero
+      matches outside of comments/tests. Result: the only match is a doc comment in
+      [`src/panelController.ts`](../../src/panelController.ts) explicitly stating that this class
+      never calls those APIs — zero actual usages anywhere.
+    - Manually inspect every rendered value site in [`TreeView.tsx`](../../src/webview/TreeView.tsx),
+      [`ColumnView.tsx`](../../src/webview/ColumnView.tsx), and
+      [`TableView.tsx`](../../src/webview/TableView.tsx) to confirm none is an `<input>`,
+      `<textarea>`, or `contenteditable` element. Result: the full element set across all three is
+      `div`/`span`/`button`/`ul`/`li`/`table`/`thead`/`tbody`/`tr`/`th`/`td` — no editable element
+      anywhere.
     - **Files:** none (verification only; no files owned)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
@@ -418,8 +563,9 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Interfaces:** Consumes: the completed source tree from tasks 2.1-5.2; Produces: a pass/fail
       verification record for Property 18 in [`03_design.md`](03_design.md#correctness-properties)
     - **Documentation:** no public surface (review task)
-    - **Verification:** the grep above returns no matches, and the manual element inspection
-      confirms no editable element exists in any of the three view components
+    - **Verification:** the grep above returns no matches (outside one confirming doc comment),
+      and the manual element inspection confirms no editable element exists in any of the three
+      view components — **PASS**
     - **Estimated effort:** 30-45 minutes
     - **Risk:** medium; a failure here means the read-only architectural guarantee was violated
       somewhere upstream and the offending task must be revisited
@@ -428,28 +574,45 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - _Requirements: 9.1, 9.2_
 
   - [ ] 6.2 Package the extension and run the end-to-end walkthrough
-    - Add `README.md`, `LICENSE`, and an icon referenced from `package.json`'s `icon` field (none
-      of these require a registered publisher id).
-    - Run `npm run compile` then `npx vsce package` to produce a `.vsix`; install it into a local
-      VS Code instance via "Install from VSIX...".
+    - Add [`README.md`](../../README.md), [`LICENSE`](../../LICENSE), and the icon image at
+      [`media/icon.png`](../../media/icon.png) (the `icon`/[`license`](../../license) fields in
+      [`package.json`](../../package.json) pointing at them were already added in task 1.1,
+      which owns that file). None of this requires a registered publisher id.
+    - Run `npm run compile -- --production` then `npx vsce package` to produce a `.vsix`; install
+      it into a local VS Code instance via "Install from VSIX..." (or `code
+      --install-extension`).
     - Manually walk through: object-only, array-of-objects, deeply nested (depth > 2), scalar-only,
       and malformed JSON fixtures, in both a light and a dark built-in theme, exercising the full
       open → view-mode-switch → edit-and-refresh → close lifecycle, from both the Extension
       Development Host and the installed `.vsix`.
-    - **Files:** `README.md`, `LICENSE`, icon asset (path TBD by author), `package.json` (add
-      `icon`/`repository`/`license` fields)
+    - **Done in this environment (no GUI available):** [`README.md`](../../README.md)/[`LICENSE`](../../LICENSE)/[`media/icon.png`](../../media/icon.png)
+      created; `npx vsce package` succeeded with no publisher-account error, producing
+      [`json-tables-0.1.0.vsix`](../../json-tables-0.1.0.vsix) (9 files: [`package.json`](../../package.json), [`readme.md`](../../readme.md), `LICENSE.txt`,
+      [`dist/extension.js`](../../dist/extension.js), [`dist/webview/main.js`](../../dist/webview/main.js), [`dist/webview/main.css`](../../dist/webview/main.css), [`media/icon.png`](../../media/icon.png) —
+      matching task 1.1's confirmed `vsce ls` file list plus the three new files); installed via
+      `code --install-extension`. While preparing the scalar-only fixture, found and fixed a real
+      gap: `TableView` rendered a silently empty table for a scalar-root document (see task 3.4's
+      amendment) — re-verified with all 34 tests before repackaging.
+    - **Still needs a human with a VS Code GUI:** the actual interactive walkthrough (opening
+      each fixture, switching view modes, editing while the panel is open, checking both
+      themes). Five fixtures are ready at `/private/tmp/claude-501/-Users-soham-GitRepos-json-tables/783adb19-77c7-4900-9c97-7b57ac4e988b/scratchpad/fixtures/`
+      (`object-only.json`, `array-of-objects.json`, `deeply-nested.json`, `scalar-only.json`,
+      `malformed.json`). This task stays unchecked until that walkthrough is confirmed — checking
+      it off without it would assert a verification that didn't actually happen.
+    - **Files:** [`README.md`](../../README.md), [`LICENSE`](../../LICENSE), [`media/icon.png`](../../media/icon.png)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 5.1, 5.2
     - **Stage:** 6
     - **Interfaces:** Consumes: the completed, compiled extension from tasks 1.1-5.2; Produces: an
       installable `.vsix` file and a recorded walkthrough result
-    - **Documentation:** `README.md` documents the command, the three view modes, and that no
+    - **Documentation:** [`README.md`](../../README.md) documents the command, the three view modes, and that no
       publisher account/Marketplace listing exists yet (per discovery's deferred-publisher
       decision)
-    - **Verification:** `npx vsce package` exits 0 without a publisher-account error; the
-      installed `.vsix` shows the same editor-title button and panel behavior as the Extension
-      Development Host across every fixture/theme combination above
+    - **Verification:** `npx vsce package` exits 0 without a publisher-account error (confirmed);
+      the installed `.vsix` shows the same editor-title button and panel behavior as the
+      Extension Development Host across every fixture/theme combination above (pending human
+      confirmation)
     - **Estimated effort:** 1.5-2.5 hours
     - **Risk:** low; packaging-only, no new application logic
     - **Task category:** review
