@@ -5,6 +5,11 @@ All notable changes to the **JSON Tables** extension will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2026-08-10
+
+### Fixed
+- **Table Column Crunching & Horizontal Scroll**: Prevented table and grid columns with long strings or nested arrays from aggressively collapsing into 1-character vertical strips; added minimum column width guards and smooth horizontal scrolling (`overflow-x: auto`) for multi-column and deeply nested structures while keeping simple tables compact.
+
 ## [0.1.6] - 2026-08-10
 
 ### Changed

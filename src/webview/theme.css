@@ -392,25 +392,27 @@ button {
   align-items: flex-start;
   overflow-x: auto;
   box-sizing: border-box;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .val-mono {
   font-family: var(--vscode-editor-font-family, monospace);
   font-size: var(--vscode-editor-font-size, 12px);
   white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: break-word;
   display: inline-block;
+  min-width: fit-content;
   max-width: 100%;
 }
 
-/* Nested tables — Fit content width naturally instead of stretching across screen */
+/* Nested tables — Fit content width naturally, compact with horizontal scrolling when needed */
 .table-view__nested {
   margin: 0;
   width: fit-content;
   max-width: 100%;
+  overflow-x: auto;
   box-sizing: border-box;
 }
 
@@ -453,6 +455,7 @@ button {
   border-collapse: collapse;
   font-size: 12px;
   width: fit-content;
+  min-width: fit-content;
   max-width: 100%;
   table-layout: auto;
   margin-top: 2px;
@@ -469,9 +472,11 @@ button {
   background: var(--vscode-sideBar-background, rgba(128, 128, 128, 0.09));
   color: var(--vscode-foreground);
   width: auto;
-  min-width: 70px;
-  max-width: 220px;
-  word-break: break-word;
+  min-width: 60px;
+  max-width: 240px;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: break-word;
   box-sizing: border-box;
 }
 
@@ -480,17 +485,19 @@ button {
   border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
   vertical-align: top;
   background: var(--vscode-editor-background);
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: break-word;
   box-sizing: border-box;
   width: auto;
-  max-width: 100%;
+  min-width: 90px;
+  max-width: 480px;
 }
 
 /* Array Grid (Table mode for arrays of objects) */
 .table-view__grid {
   border-collapse: collapse;
   width: fit-content;
+  min-width: fit-content;
   max-width: 100%;
   font-size: 12px;
   border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
@@ -505,6 +512,7 @@ button {
   font-weight: 600;
   text-align: left;
   white-space: nowrap;
+  min-width: 60px;
   box-sizing: border-box;
 }
 
@@ -512,8 +520,10 @@ button {
   padding: 4px 8px;
   border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
   vertical-align: top;
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: break-word;
+  min-width: 80px;
+  max-width: 480px;
   box-sizing: border-box;
 }
 
