@@ -22,7 +22,8 @@
       {
         "command": "jsonTables.visualize",
         "title": "Visualize JSON",
-        "category": "JSON Tables"
+        "category": "JSON Tables",
+        "icon": "$(table)"
       }
     ],
     "menus": {
