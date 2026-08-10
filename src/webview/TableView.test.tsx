@@ -57,7 +57,7 @@ test("renders an array of objects as a grid with unioned column headers", () => 
   cleanup();
 });
 
-test("renders a nested object/array cell as a preview badge, never inline", () => {
+test("renders a nested object and array as nested tables showing key-value pairs", () => {
   const node: JsonNode = {
     kind: "object",
     path: [],
@@ -77,11 +77,10 @@ test("renders a nested object/array cell as a preview badge, never inline", () =
     ],
   };
   const { container } = render(<TableView node={node} />);
-  const objectBadge = container.querySelector('[data-kind="object"]');
-  const arrayBadge = container.querySelector('[data-kind="array"]');
-  assert.equal(objectBadge?.textContent, "{1}");
-  assert.equal(arrayBadge?.textContent, "[1]");
-  assert.equal(container.textContent?.includes("London"), false, "nested content never renders inline");
+  const nestedTables = container.querySelectorAll(".table-view__nested table");
+  assert.ok(nestedTables.length >= 2, "renders nested tables for nested container nodes");
+  assert.ok(container.textContent?.includes("London"), "nested object content renders inline as key-value pairs");
+  assert.ok(container.textContent?.includes('"a"'), "nested array content renders inline");
   cleanup();
 });
 

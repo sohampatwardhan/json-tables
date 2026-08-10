@@ -1,24 +1,25 @@
-import type { JsonNode } from "../shared/types";
+import type { JsonNode } from "../shared/types.ts";
 
 function scalarText(node: JsonNode): string {
   if (node.kind === "string") return `"${String(node.value)}"`;
   return String(node.value);
 }
 
-/** A cell whose own value is an object/array renders its type and size, never the nested content. */
-function PreviewBadge({ node }: { node: JsonNode }) {
-  const count = node.children?.length ?? 0;
-  return (
-    <span class="table-view__badge" data-kind={node.kind}>
-      {node.kind === "array" ? `[${count}]` : `{${count}}`}
-    </span>
-  );
-}
-
-/** Renders any node's value as a table cell: a badge for objects/arrays, plain text otherwise. */
+/** Renders any node's value as a table cell: a nested table for objects/arrays, scalar text otherwise. */
 function Cell({ node }: { node: JsonNode }) {
   if (node.kind === "object" || node.kind === "array") {
-    return <PreviewBadge node={node} />;
+    if (!node.children || node.children.length === 0) {
+      return (
+        <span class="table-view__empty" data-kind={node.kind}>
+          {node.kind === "array" ? "[]" : "{}"}
+        </span>
+      );
+    }
+    return (
+      <div class="table-view__nested">
+        <TableView node={node} />
+      </div>
+    );
   }
   return <span data-kind={node.kind}>{scalarText(node)}</span>;
 }
@@ -93,9 +94,7 @@ export function ArrayGrid({ node }: { node: JsonNode }) {
 
 /**
  * Chooses `ArrayGrid` for an array of objects, `KeyValueTable` for anything else with children
- * (a plain object or array of scalars), or the value itself for a scalar root — a document whose
- * top-level value is a bare number/string/boolean/null has no rows to iterate, and `KeyValueTable`
- * would otherwise render a silently empty table with no visible value at all.
+ * (a plain object or array of scalars), or the value itself for a scalar root.
  */
 export function TableView({ node }: { node: JsonNode }) {
   if (node.kind !== "object" && node.kind !== "array") {
@@ -106,9 +105,12 @@ export function TableView({ node }: { node: JsonNode }) {
     );
   }
   const isArrayOfObjects =
-    node.kind === "array" && (node.children ?? []).every((child) => child.kind === "object");
+    node.kind === "array" &&
+    (node.children?.length ?? 0) > 0 &&
+    (node.children ?? []).every((child) => child.kind === "object");
   if (isArrayOfObjects) {
     return <ArrayGrid node={node} />;
   }
   return <KeyValueTable node={node} />;
 }
+

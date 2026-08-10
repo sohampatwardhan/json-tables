@@ -1,8 +1,8 @@
 import { useEffect, useState } from "preact/hooks";
-import { TreeNode, defaultExpandedPaths, collectExpandablePaths } from "./TreeView";
-import { ColumnView } from "./ColumnView";
-import { TableView } from "./TableView";
-import type { HostMessage, JsonNode, ViewMode, ViewModel, WebviewMessage } from "../shared/types";
+import { TreeNode, defaultExpandedPaths, collectExpandablePaths } from "./TreeView.tsx";
+import { ColumnView } from "./ColumnView.tsx";
+import { TableView } from "./TableView.tsx";
+import type { HostMessage, JsonNode, ViewMode, ViewModel, WebviewMessage } from "../shared/types.ts";
 
 const VIEW_MODES: ViewMode[] = ["tree", "column", "table"];
 
@@ -90,6 +90,7 @@ export function App({ postMessage }: AppProps) {
         ))}
         {viewMode === "tree" && (
           <>
+            <div class="app__toolbar-divider" />
             <button type="button" onClick={handleExpandAll}>
               Expand all
             </button>
@@ -101,12 +102,18 @@ export function App({ postMessage }: AppProps) {
       </div>
       <div class="app__content">
         {viewMode === "tree" && (
-          <TreeNode node={viewModel.root} expandedPaths={expandedPaths} onToggle={handleToggle} />
+          <div class="tree-container">
+            <TreeNode node={viewModel.root} expandedPaths={expandedPaths} onToggle={handleToggle} />
+          </div>
         )}
         {viewMode === "column" && (
           <ColumnView root={viewModel.root} selectedPath={selectedPath} onSelectPath={setSelectedPath} />
         )}
-        {viewMode === "table" && <TableView node={viewModel.root} />}
+        {viewMode === "table" && (
+          <div class="table-view-container">
+            <TableView node={viewModel.root} />
+          </div>
+        )}
       </div>
     </div>
   );

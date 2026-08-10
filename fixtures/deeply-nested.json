@@ -1,0 +1,27 @@
+{
+  "company": {
+    "name": "Acme Corp",
+    "departments": [
+      {
+        "name": "Engineering",
+        "lead": {
+          "name": "Devin",
+          "contact": {
+            "email": "devin@acme.com",
+            "phone": "+1-555-0199"
+          }
+        },
+        "projects": [
+          {
+            "id": "proj-1",
+            "title": "JSON Tables Extension",
+            "milestones": [
+              { "phase": 1, "done": true },
+              { "phase": 2, "done": false }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

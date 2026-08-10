@@ -1,0 +1,5 @@
+{
+  "validKey": "validValue",
+  "missingComma": 123
+  "syntaxError": true
+}
