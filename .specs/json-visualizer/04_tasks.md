@@ -84,7 +84,9 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       tasks 3.2/3.3/4.2, which need real click/pointer-drag simulation that a static
       `preact-render-to-string` snapshot cannot provide — added after `plan-harden` found this
       gap between task 1.1's dependency list and what those tasks' own Verification fields
-      require).
+      require), and `@types/jsdom@30.0.0` (added during task 3.2 once `tsc --noEmit` flagged
+      `jsdom`'s missing type declarations — a second `dependency-security-audit change` pre/post
+      pair covers this addition specifically, project revision `54616684e22d300cb80cfce04a48d24b5d3a97aa`).
     - Confirm during setup that esbuild's default CSS-import bundling emits a sibling
       `dist/webview/main.css` alongside [`dist/webview/main.js`](../../dist/webview/main.js) when [`src/webview/main.tsx`](../../src/webview/main.tsx)
       imports `theme.css` (task 5.2) — task 4.1's webview HTML generation links this output.
@@ -184,8 +186,8 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - _Requirements: 8.1, 8.4_
 
 - [ ] 3. Core Rendering and Parsing Logic
-  - [ ] 3.1 Implement the View Model Builder
-    - Create `src/viewModelBuilder.ts` exporting `buildViewModel(text: string): ViewModel`.
+  - [x] 3.1 Implement the View Model Builder
+    - Create [`src/viewModelBuilder.ts`](../../src/viewModelBuilder.ts) exporting `buildViewModel(text: string): ViewModel`.
       Consult the Current Technology Evidence entry for `jsonc-parser`'s corrected API note in
       [`03_design.md`](03_design.md#current-technology-evidence) before writing the parse call
       (its API wasn't in Context7's index, and an earlier draft of this design misdescribed
@@ -200,7 +202,7 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       characters in `text` up to that offset — not `jsonc-parser`'s `getLocation` (which resolves
       a JSON path segment at an offset, for completion/hover providers, and has no line/column
       output).
-    - **Files:** `src/viewModelBuilder.ts`
+    - **Files:** [`src/viewModelBuilder.ts`](../../src/viewModelBuilder.ts)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 2.1
@@ -209,7 +211,7 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       `parseTree`; Produces: `buildViewModel(text): ViewModel`, consumed by task 4.1
     - **Documentation:** doc comment on `buildViewModel` stating its error-vs-tree contract (never
       returns a partial tree alongside errors)
-    - **Verification:** unit tests (`src/viewModelBuilder.test.ts`) covering an object, an array
+    - **Verification:** unit tests ([`src/viewModelBuilder.test.ts`](../../src/viewModelBuilder.test.ts)) covering an object, an array
       of scalars, an array of objects, nesting past depth 2, an empty document, and malformed
       inputs (unterminated string, truncated document), asserting both the `JsonNode` shape and
       the error branch's `message`/`line`/`column`
@@ -219,27 +221,39 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Delegation:** parallel-safe
     - _Requirements: 2.1, 2.2_
 
-  - [ ] 3.2 Implement the Tree View component
-    - Create `src/webview/TreeView.tsx` exporting a recursive `TreeNode({ node, path, depth,
+  - [x] 3.2 Implement the Tree View component
+    - Create [`src/webview/TreeView.tsx`](../../src/webview/TreeView.tsx) exporting a recursive `TreeNode({ node, path, depth,
       expandedPaths, onToggle })` Preact component: chevron + key/index + `{n}`/`[n]` child-count
       header for object/array nodes; leaf values render with a `data-kind={node.kind}` attribute.
     - Nodes with `path.length < 2` are treated as expanded by default when `expandedPaths` has no
       entry for them yet; `depth >= 2` nodes are treated as collapsed by default. Clicking a
       chevron calls `onToggle(path)`, which the caller (task 4.2) uses to flip only that path's
       membership in `expandedPaths`.
-    - **Files:** `src/webview/TreeView.tsx`
-    - **Dependency resolution:** none
+    - While writing this task's test, `tsc --noEmit` flagged that `jsdom` ships no type
+      declarations of its own; added `@types/jsdom@30.0.0` as a devDependency (a second,
+      narrower `dependency-security-audit change` pre/post pair, since this task now also
+      touches [`package.json`](../../package.json)/[`package-lock.json`](../../package-lock.json)).
+    - **Files:** [`src/webview/TreeView.tsx`](../../src/webview/TreeView.tsx), [`src/webview/TreeView.test.tsx`](../../src/webview/TreeView.test.tsx), [`src/webview/testSetup.ts`](../../src/webview/testSetup.ts), [`package.json`](../../package.json), [`package-lock.json`](../../package-lock.json)
+    - **Dependency resolution:** change
     - **Dependency delivery:** none
+    - **Context7 evidence:** state=completed | identity=/preactjs/preact-www | version=10.29.8 | decision=confirmed `@testing-library/preact`'s `render`/`fireEvent`/`cleanup` operate on Preact's real DOM output, consistent with the hooks-based component design in [`03_design.md`](03_design.md#current-technology-evidence)
+    - **Pre-change dependency audit:** state=completed | command=dependency-security-audit change | mode=change | timestamp=2026-08-10T04:23:13.210016Z | project_revision=54616684e22d300cb80cfce04a48d24b5d3a97aa | inventory_fingerprint=9092820c61ec68739ac96ffda6753921024499792da89801c26e7c4c75759663 | json=[.security/dependency-audit/pre-change-2.json](../../.security/dependency-audit/pre-change-2.json) | markdown=[.security/dependency-audit/pre-change-2.md](../../.security/dependency-audit/pre-change-2.md) | review=completed | result=warnings | exit=0 | decision=baseline captured with the manifest reverted to the last committed state (before `@types/jsdom`); 0 findings, "warnings" is solely partial-inventory — accepted | warnings_reviewed=true | clean=false
+    - **Resolution edit:** state=completed | files=[package.json](../../package.json), [package-lock.json](../../package-lock.json)
+    - **Project tests:** state=completed | evidence=[src/webview/TreeView.test.tsx](../../src/webview/TreeView.test.tsx)
+    - **Post-change dependency audit:** state=completed | command=dependency-security-audit change | mode=change | timestamp=2026-08-10T04:23:28.284064Z | project_revision=54616684e22d300cb80cfce04a48d24b5d3a97aa | inventory_fingerprint=8d788f64cb6127b42a22059de3661719fd0f25a9f27e9a5db9d5a27e11eceb6f | json=[.security/dependency-audit/post-change-2.json](../../.security/dependency-audit/post-change-2.json) | markdown=[.security/dependency-audit/post-change-2.md](../../.security/dependency-audit/post-change-2.md) | review=completed | result=warnings | exit=0 | decision=0 blocking/actionable findings; "warnings" is solely incomplete-inventory for optional platform-specific native binaries — accepted | warnings_reviewed=true | clean=false
     - **Depends on:** 2.1
     - **Stage:** 3
-    - **Interfaces:** Consumes: `JsonNode` type from 2.1; Produces: `TreeNode` component with the
-      props above, consumed by task 4.2's `App`
-    - **Documentation:** doc comment on `TreeNode` stating the depth-2 default-expansion rule and
-      that `expandedPaths` is owned by the caller, not local state
-    - **Verification:** component test (`src/webview/TreeView.test.tsx` via
-      `@testing-library/preact` against a `jsdom` environment) asserting depth-2 default
-      expansion, independent per-node toggling via simulated clicks, and the `data-kind`
-      attribute per value type
+    - **Interfaces:** Consumes: `JsonNode` type from 2.1; Produces: `TreeNode`,
+      `defaultExpandedPaths`, `pathKey`, `collectExpandablePaths` from
+      [`src/webview/TreeView.tsx`](../../src/webview/TreeView.tsx), consumed by task 4.2's `App`
+    - **Documentation:** doc comment on `TreeNode` stating that `expandedPaths` is owned by the
+      caller, not local state, and on `defaultExpandedPaths` stating the depth-2 default-expansion
+      rule and that it is the one place that default is computed
+    - **Verification:** component test ([`src/webview/TreeView.test.tsx`](../../src/webview/TreeView.test.tsx) via
+      `@testing-library/preact` against a `jsdom` environment) asserting `defaultExpandedPaths`
+      includes every depth-`<2` object/array node and excludes deeper ones, independent per-node
+      toggling via simulated clicks, and the `data-kind` attribute per value type — 4 tests, all
+      passing; `npx tsc --noEmit` and `npm run compile` both exit 0
     - **Estimated effort:** 2-3 hours
     - **Risk:** low
     - **Task category:** code_analysis

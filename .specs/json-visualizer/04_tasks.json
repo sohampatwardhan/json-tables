@@ -3,15 +3,11 @@
     "active_stage": 3,
     "blocked": {},
     "parallel_candidates": [
-      "3.1",
-      "3.2",
       "3.3",
       "3.4",
       "3.5"
     ],
     "ready": [
-      "3.1",
-      "3.2",
       "3.3",
       "3.4",
       "3.5"
@@ -21,8 +17,6 @@
       {
         "mode": "parallel",
         "tasks": [
-          "3.1",
-          "3.2",
           "3.3",
           "3.4",
           "3.5"
@@ -33,7 +27,7 @@
   },
   "generated_from": {
     "file": "04_tasks.md",
-    "sha256": "10dfb3ead300183ce4819d8bba76548d3383b7b608b6a99221340b34642fa3d5"
+    "sha256": "98b898b614198386c456706dfb2f9ccba6330eb863a09eef2768b287def1a923"
   },
   "requirement_count": 35,
   "schema_version": 1,
@@ -150,7 +144,7 @@
     },
     {
       "capability_tier": "frontier",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -173,22 +167,26 @@
       "stage": 3,
       "task_category": "code_analysis",
       "title": "Implement the View Model Builder",
-      "verification": "unit tests (`src/viewModelBuilder.test.ts`) covering an object, an array of scalars, an array of objects, nesting past depth 2, an empty document, and malformed inputs (unterminated string, truncated document), asserting both the `JsonNode` shape and the error branch's `message`/`line`/`column`"
+      "verification": "unit tests ([`src/viewModelBuilder.test.ts`](../../src/viewModelBuilder.test.ts)) covering an object, an array of scalars, an array of objects, nesting past depth 2, an empty document, and malformed inputs (unterminated string, truncated document), asserting both the `JsonNode` shape and the error branch's `message`/`line`/`column`"
     },
     {
       "capability_tier": "balanced",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
-      "dependency_resolution": "none",
+      "dependency_resolution": "change",
       "depends_on": [
         "2.1"
       ],
       "files": [
-        "src/webview/TreeView.tsx"
+        "src/webview/TreeView.tsx",
+        "src/webview/TreeView.test.tsx",
+        "src/webview/testSetup.ts",
+        "package.json",
+        "package-lock.json"
       ],
       "id": "3.2",
-      "interfaces": "Consumes: `JsonNode` type from 2.1; Produces: `TreeNode` component with the props above, consumed by task 4.2's `App`",
+      "interfaces": "Consumes: `JsonNode` type from 2.1; Produces: `TreeNode`, `defaultExpandedPaths`, `pathKey`, `collectExpandablePaths` from [`src/webview/TreeView.tsx`](../../src/webview/TreeView.tsx), consumed by task 4.2's `App`",
       "optional": false,
       "reasoning_level": "medium",
       "requirements": [
@@ -203,7 +201,7 @@
       "stage": 3,
       "task_category": "code_analysis",
       "title": "Implement the Tree View component",
-      "verification": "component test (`src/webview/TreeView.test.tsx` via `@testing-library/preact` against a `jsdom` environment) asserting depth-2 default expansion, independent per-node toggling via simulated clicks, and the `data-kind` attribute per value type"
+      "verification": "component test ([`src/webview/TreeView.test.tsx`](../../src/webview/TreeView.test.tsx) via `@testing-library/preact` against a `jsdom` environment) asserting `defaultExpandedPaths` includes every depth-`<2` object/array node and excludes deeper ones, independent per-node toggling via simulated clicks, and the `data-kind` attribute per value type \u2014 4 tests, all passing; `npx tsc --noEmit` and `npm run compile` both exit 0"
     },
     {
       "capability_tier": "frontier",

@@ -40,13 +40,27 @@
           }
         ],
         "name": "Stage 2"
+      },
+      {
+        "bars": [
+          {
+            "end": "2026-08-10T04:17:08",
+            "id": "b_3_1_attempt1",
+            "label": "3.1 attempt 1 (verified, 137s)",
+            "start": "2026-08-10T04:14:51",
+            "tags": [
+              "done"
+            ]
+          }
+        ],
+        "name": "Stage 3"
       }
     ],
     "target": "gantt"
   },
   "generated_from": {
     "file": "05_execution.md",
-    "sha256": "f22e1b3ce246d41291ff9872b6d10e981310869fff1ac7abb0678c72850b68bf"
+    "sha256": "b47639b10d7aff6a86d4e139447c466bed646ed4b879c5df9f3d6cb86e5391fa"
   },
   "runs": [
     {
@@ -88,6 +102,16 @@
       "started_utc": "2026-08-10T04:07:50Z",
       "stopped_utc": "2026-08-10T04:13:04Z",
       "task": "2.2"
+    },
+    {
+      "attempt": 1,
+      "elapsed_seconds": 137,
+      "outcome": "verified",
+      "run_id": "run-20260810T034356Z",
+      "stage_wave": "Stage 3",
+      "started_utc": "2026-08-10T04:14:51Z",
+      "stopped_utc": "2026-08-10T04:17:08Z",
+      "task": "3.1"
     }
   ],
   "unresolved": [
