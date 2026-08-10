@@ -14,7 +14,9 @@
     "Visualization",
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onCommand:jsonTables.visualize"
+  ],
   "contributes": {
     "commands": [
       {

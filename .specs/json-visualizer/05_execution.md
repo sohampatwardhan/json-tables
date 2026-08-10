@@ -131,6 +131,23 @@ between roughly 04:29 and 12:46 UTC; both are recorded `interrupted` with unknow
   [`03_design.md`](03_design.md)/[`04_tasks.md`](04_tasks.md)/[`diagrams/flows.json`](diagrams/flows.json)'s sequence diagram to match, and
   render-validated the regenerated diagram.
 
+- **Real-device bug found during task 6.2's walkthrough:** clicking the editor-title button
+  failed with `command 'jsonTables.visualize' not found` on the user's actual VS Code
+  (1.132.0). First hypothesis — `activationEvents: []` not implicitly activating — was
+  addressed by adding an explicit `onCommand` event, but the user still saw the identical error
+  after a full VS Code restart, ruling that out as the real cause. Reproduced the failure
+  locally without any GUI by simulating the real `activate(context)` call against the exact
+  built [`dist/extension.js`](../../dist/extension.js), using a minimal fake `vscode` module on `NODE_PATH`: it threw
+  `Cannot find module './impl/format'` before ever reaching `registerCommand` — which is
+  exactly why the command was never found. Root cause: `jsonc-parser`'s `main` field resolves to
+  a UMD build whose factory receives `require` through a renamed parameter, which esbuild's
+  literal-`require()`-only static bundler can't follow, leaving one inner require unresolved at
+  runtime. Fixed with `mainFields: ["module", "main"]` in
+  [`esbuild.config.mjs`](../../esbuild.config.mjs), preferring jsonc-parser's real ESM build.
+  Re-ran the same local simulation post-fix (`activate()` now completes and registers the
+  command without throwing), re-verified all 34 tests and `tsc --noEmit`, repackaged, and
+  reinstalled. Awaiting the user's confirmation that the extension works end-to-end.
+
 ## Integration Decision
 
 - Status: pending — Stages 1-5 and task 6.1 complete and committed to `feature/json-visualizer`;

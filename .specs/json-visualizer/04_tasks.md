@@ -98,6 +98,29 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       ("Visualize JSON") and `contributes.menus["editor/title"]` with `"when": "resourceLangId
       == json || resourceLangId == jsonc"`, `"group": "navigation"` — the `when`-clause syntax
       confirmed in [`03_design.md`](03_design.md#current-technology-evidence).
+    - **Amended after real-device testing during task 6.2's walkthrough:** the editor-title icon
+      appeared (menu contributions are read at extension discovery, before activation), but
+      clicking it failed with "command 'jsonTables.visualize' not found". First added an explicit
+      `"activationEvents": ["onCommand:jsonTables.visualize"]` (correct practice regardless, since
+      VS Code's "implicit activation from `contributes.commands`" behavior, documented as
+      sufficient since 1.74, didn't reliably fire here) — this did **not** fix it; the user still
+      saw the same error after a full VS Code restart.
+    - **Found the actual root cause by simulating `activate()` locally** against the exact built
+      [`dist/extension.js`](../../dist/extension.js), using a minimal fake `vscode` module on `NODE_PATH` (no VS Code GUI
+      needed for this): `require()`-ing the real bundle threw `Cannot find module
+      './impl/format'` — never even reaching `registerCommand`, which explains "command not
+      found" precisely (it genuinely never got registered). `jsonc-parser`'s `main` field points
+      to a UMD build whose factory receives `require` through a renamed parameter
+      (`n(require, y)` calling into `function(n, e) { ... n("./impl/format") ... }`); esbuild can
+      only statically bundle a literal `require(...)` call, not one reached through a variable,
+      so that inner require was left as an unresolved runtime call — which, once bundled, tried
+      to resolve `./impl/format` relative to [`dist/extension.js`](../../dist/extension.js)'s location, where no such file
+      exists. Fixed in [`esbuild.config.mjs`](../../esbuild.config.mjs) by setting
+      `mainFields: ["module", "main"]` on the extension build, so esbuild prefers jsonc-parser's
+      real ESM build (ordinary static imports, no UMD indirection) instead of `main`. Re-ran the
+      same local simulation after the fix — `activate()` now completes and calls
+      `registerCommand("jsonTables.visualize", ...)` without throwing — then re-verified all 34
+      tests and `tsc --noEmit`, repackaged, and reinstalled. Awaiting the user's confirmation.
     - Add [`.gitignore`](../../.gitignore) ([`node_modules/`](../../node_modules), [`dist/`](../../dist), `*.vsix`) and [`.vscodeignore`](../../.vscodeignore) (excludes [`src/`](../../src),
       [`.specs/`](../../.specs), [`node_modules/`](../../node_modules) — esbuild already bundles `preact`/
       `jsonc-parser` into [`dist/`](../../dist), so shipping [`node_modules`](../../node_modules) too would just bloat the `.vsix` —

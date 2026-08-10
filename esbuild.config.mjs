@@ -12,6 +12,16 @@ const extensionConfig = {
   format: "cjs",
   target: "node18",
   external: ["vscode"],
+  // esbuild's `platform: "node"` default mainFields is `["main"]` only. jsonc-parser's `main`
+  // points to a UMD build whose factory receives `require` through a renamed parameter
+  // (`n(require, y)` calling `function(n, e) { ... n("./impl/format") ... }`) — esbuild can only
+  // statically bundle a literal `require(...)` call, not one routed through a variable, so that
+  // inner require is left unresolved and fails at actual runtime (`Cannot find module
+  // './impl/format'`, relative to dist/extension.js, which has no such file). Preferring `module`
+  // (jsonc-parser's real ESM build, with ordinary static imports) avoids the UMD indirection
+  // entirely. Caught by simulating activate() against a fake `vscode` module locally — see
+  // 04_tasks.md's task 1.1 amendment.
+  mainFields: ["module", "main"],
   sourcemap: !production,
   minify: production,
 };
