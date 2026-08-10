@@ -365,14 +365,14 @@ button {
 }
 
 .kv-key {
-  width: clamp(90px, 18%, 180px);
-  min-width: 90px;
+  width: clamp(100px, 18%, 180px);
+  min-width: 100px;
   max-width: 220px;
   flex-shrink: 0;
   padding: 8px 12px;
-  background: var(--vscode-sideBarSectionHeader-background, rgba(59, 130, 246, 0.07));
-  color: var(--vscode-descriptionForeground);
-  font-weight: 500;
+  background: var(--vscode-sideBar-background, rgba(128, 128, 128, 0.09));
+  color: var(--vscode-foreground);
+  font-weight: 600;
   font-size: var(--vscode-font-size, 13px);
   border-right: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
   display: flex;
@@ -464,11 +464,11 @@ button {
 .nested-key {
   padding: 4px 8px;
   border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
-  font-weight: 500;
+  font-weight: 600;
   vertical-align: top;
-  background: var(--vscode-sideBarSectionHeader-background, rgba(59, 130, 246, 0.08));
-  color: var(--vscode-descriptionForeground);
-  width: clamp(70px, 18%, 150px);
+  background: var(--vscode-sideBar-background, rgba(128, 128, 128, 0.09));
+  color: var(--vscode-foreground);
+  width: clamp(80px, 18%, 150px);
   max-width: 160px;
   word-break: break-word;
   box-sizing: border-box;
@@ -478,7 +478,7 @@ button {
   padding: 4px 8px;
   border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
   vertical-align: top;
-  background: rgba(245, 158, 11, 0.02);
+  background: var(--vscode-editor-background);
   word-break: break-word;
   overflow-wrap: anywhere;
   box-sizing: border-box;
@@ -497,7 +497,7 @@ button {
 .table-view__grid th {
   padding: 6px 10px;
   border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
-  background: var(--vscode-sideBarSectionHeader-background, rgba(59, 130, 246, 0.08));
+  background: var(--vscode-sideBar-background, rgba(128, 128, 128, 0.09));
   color: var(--vscode-foreground);
   font-weight: 600;
   text-align: left;
