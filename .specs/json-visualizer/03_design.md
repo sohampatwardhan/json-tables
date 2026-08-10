@@ -1,7 +1,7 @@
 # Design: JSON Visualizer VS Code Extension
 
 <!-- spec-nav:start -->
-**Spec navigation:** [State](00_state.md) · [Discovery](01_discovery.md) · [Requirements](02_requirements.md) · [Design](03_design.md) · [Tasks](04_tasks.md)
+**Spec navigation:** [State](00_state.md) · [Discovery](01_discovery.md) · [Requirements](02_requirements.md) · [Design](03_design.md) · [Tasks](04_tasks.md) · [Execution](05_execution.md)
 <!-- spec-nav:end -->
 
 > [!IMPORTANT]
@@ -82,12 +82,16 @@ wiring.
 
 ### `viewModelBuilder.ts`
 
-- `buildViewModel(text: string): ViewModel` — parses `text` with `jsonc-parser`'s `parseTree` and
-  walks the resulting parse tree into the `JsonNode` shape below (see Data Models). If
-  `jsonc-parser` reports any `ParseError`, returns `{ status: "error", message, line, column }`
-  instead of a partial tree — **R2.1, R2.2, R8.1, R8.5**. `line`/`column` come from converting the
-  first error's byte offset via `jsonc-parser`'s own `getLocation`, so the message can point at an
-  exact position rather than "somewhere in the file."
+- `buildViewModel(text: string): ViewModel` — parses `text` with `jsonc-parser`'s `parseTree(text,
+  errors)`, which reports parse failures through the `errors: ParseError[]` array it mutates
+  (not a return value) rather than throwing. If that array is non-empty, returns `{ status:
+  "error", message, line, column }` instead of a partial tree — **R2.1, R2.2, R8.1, R8.5**. Each
+  `ParseError` carries only `{ error, offset, length }` — `jsonc-parser` has no offset-to-position
+  API (`getLocation(text, offset)` answers a different question: which JSON path segment
+  contains that offset, for completion/hover providers, not `{line, column}`). `line`/`column`
+  instead come from a small local helper in this same file that counts `\n` characters in `text`
+  up to the error's `offset`, keeping `buildViewModel` a pure function with no VS Code API
+  dependency.
 - Pure function, no VS Code API dependency — directly unit-testable (see Testing Strategy).
 
 ### `panelController.ts`
@@ -448,9 +452,13 @@ Development Host.
 Each row above reflects a library actually consulted through Context7 (`resolve-library-id` then
 `query-docs`) at the identity/source shown, before its corresponding decision was made.
 `jsonc-parser` (Microsoft's own tolerant JSON/JSONC parser, used inside VS Code itself) was not
-found in Context7's index under that name; its `parseTree`/`ParseError`/`getLocation` surface has
-been stable for years and is exercised directly in the fixtures described under Testing Strategy,
-so this design accepts that gap rather than blocking on it.
+found in Context7's index under that name. This design initially misdescribed `getLocation` as an
+offset-to-line/column converter; `plan-harden`'s preflight review caught the error against the
+package's actual `.d.ts` (`getLocation` resolves a JSON path segment at an offset, for
+completion/hover providers — it has no line/column output), so the corrected `viewModelBuilder.ts`
+section above uses a local newline-counting helper instead. `parseTree`'s out-parameter `errors`
+array is otherwise stable and is exercised directly in the fixtures described under Testing
+Strategy.
 
 ## Dependency Security Evidence
 

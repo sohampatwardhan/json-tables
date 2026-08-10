@@ -21,7 +21,7 @@
   },
   "generated_from": {
     "file": "04_tasks.md",
-    "sha256": "fe1b5e08d0006608cec8eba31d1314d1496a5e4c22c2dfbb4a573b83f544e257"
+    "sha256": "ea5fcfe22c1ff3ddee7cdef61f18cc9d4bed1301ff16a1ced9fbdb43160590d3"
   },
   "requirement_count": 35,
   "schema_version": 1,
@@ -149,7 +149,7 @@
         "src/viewModelBuilder.ts"
       ],
       "id": "3.1",
-      "interfaces": "Consumes: `JsonNode`/`ViewModel`/`NodeKind` types from 2.1, `jsonc-parser`'s `parseTree`/`getLocation`; Produces: `buildViewModel(text): ViewModel`, consumed by task 4.1",
+      "interfaces": "Consumes: `JsonNode`/`ViewModel`/`NodeKind` types from 2.1, `jsonc-parser`'s `parseTree`; Produces: `buildViewModel(text): ViewModel`, consumed by task 4.1",
       "optional": false,
       "reasoning_level": "high",
       "requirements": [
@@ -191,7 +191,7 @@
       "stage": 3,
       "task_category": "code_analysis",
       "title": "Implement the Tree View component",
-      "verification": "component test (`src/webview/TreeView.test.tsx` via `preact-render-to-string`) asserting depth-2 default expansion, independent per-node toggling, and the `data-kind` attribute per value type"
+      "verification": "component test (`src/webview/TreeView.test.tsx` via `@testing-library/preact` against a `jsdom` environment) asserting depth-2 default expansion, independent per-node toggling via simulated clicks, and the `data-kind` attribute per value type"
     },
     {
       "capability_tier": "frontier",
@@ -220,7 +220,7 @@
       "stage": 3,
       "task_category": "code_analysis",
       "title": "Implement the Column View component",
-      "verification": "component test asserting drill-down appends exactly one column per object/array selection, scalar selection never appends a column, and a resize drag updates only the dragged column's width"
+      "verification": "component test (`@testing-library/preact` + `jsdom`) asserting drill-down appends exactly one column per object/array selection, scalar selection never appends a column, and a simulated `pointerdown`/`pointermove`/`pointerup` drag sequence updates only the dragged column's width"
     },
     {
       "capability_tier": "balanced",
@@ -346,7 +346,7 @@
       "stage": 4,
       "task_category": "code_analysis",
       "title": "Implement the App root component",
-      "verification": "component test covering: error-state renders the inline banner and no view; `init`/`update` messages update `viewModel`; toggling view mode re-renders without re-requesting data; expand-all/collapse-all mutate the full `expandedPaths` set"
+      "verification": "component test (`@testing-library/preact` + `jsdom`) covering: error-state renders the inline banner and no view; simulated `init`/`update` `window.postMessage` events update `viewModel`; simulated toggle clicks re-render without re-requesting data; expand-all/collapse-all clicks mutate the full `expandedPaths` set"
     },
     {
       "capability_tier": "economical",

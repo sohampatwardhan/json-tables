@@ -1,0 +1,51 @@
+{
+  "name": "json-tables",
+  "displayName": "JSON Tables",
+  "description": "Visualize JSON files as an interactive Tree, Column, or Key-Value/Table view, right beside the source editor.",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "main": "./dist/extension.js",
+  "categories": ["Visualization", "Other"],
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "jsonTables.visualize",
+        "title": "Visualize JSON",
+        "category": "JSON Tables"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "jsonTables.visualize",
+          "when": "resourceLangId == json || resourceLangId == jsonc",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "node esbuild.config.mjs",
+    "watch": "node esbuild.config.mjs --watch",
+    "test": "node --import tsx --test src/**/*.test.ts src/**/*.test.tsx",
+    "package": "npm run compile -- --production && vsce package"
+  },
+  "dependencies": {
+    "preact": "10.29.8",
+    "jsonc-parser": "3.3.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2",
+    "@types/node": "26.2.0",
+    "@types/vscode": "1.125.0",
+    "tsx": "4.23.11",
+    "@vscode/vsce": "3.9.2",
+    "@testing-library/preact": "3.2.4",
+    "jsdom": "30.0.1"
+  }
+}

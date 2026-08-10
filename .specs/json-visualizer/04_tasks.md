@@ -1,7 +1,7 @@
 # Tasks: JSON Visualizer VS Code Extension
 
 <!-- spec-nav:start -->
-**Spec navigation:** [State](00_state.md) · [Discovery](01_discovery.md) · [Requirements](02_requirements.md) · [Design](03_design.md) · [Tasks](04_tasks.md)
+**Spec navigation:** [State](00_state.md) · [Discovery](01_discovery.md) · [Requirements](02_requirements.md) · [Design](03_design.md) · [Tasks](04_tasks.md) · [Execution](05_execution.md)
 <!-- spec-nav:end -->
 
 > [!WARNING]
@@ -76,7 +76,15 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       `esbuild@0.28.2`, `typescript@7.0.2`, `@types/node@26.2.0`, `@types/vscode@1.125.0`,
       `tsx@4.23.11` (runs the `.ts` test files directly under Node's built-in test runner),
       `@vscode/vsce@3.9.2` (packaging CLI for task 6.2 — no publisher account needed to run
-      `vsce package`, only `vsce publish`).
+      `vsce package`, only `vsce publish`), `@testing-library/preact@3.2.4` and `jsdom@30.0.1`
+      (DOM environment + interaction simulation for the Stage 3/4 webview component tests in
+      tasks 3.2/3.3/4.2, which need real click/pointer-drag simulation that a static
+      `preact-render-to-string` snapshot cannot provide — added after `plan-harden` found this
+      gap between task 1.1's dependency list and what those tasks' own Verification fields
+      require).
+    - Confirm during setup that esbuild's default CSS-import bundling emits a sibling
+      `dist/webview/main.css` alongside `dist/webview/main.js` when `src/webview/main.tsx`
+      imports `theme.css` (task 5.2) — task 4.1's webview HTML generation links this output.
     - In the same `package.json`, add `contributes.commands` for `jsonTables.visualize`
       ("Visualize JSON") and `contributes.menus["editor/title"]` with `"when": "resourceLangId
       == json || resourceLangId == jsonc"`, `"group": "navigation"` — the `when`-clause syntax
@@ -88,10 +96,10 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Dependency resolution:** change
     - **Dependency delivery:** none
     - **Context7 evidence:** state=pending | identity=/evanw/esbuild | version=0.28.2 | decision=confirm `--jsx`/`jsxImportSource` bundling flags for Preact per [`03_design.md`](03_design.md#current-technology-evidence) before finalizing `esbuild.config.mjs`
-    - **Pre-change dependency audit:** state=pending | command=`dependency-security-audit change` | expected_json=`.security/dependency-audit/pre-change.json` | expected_markdown=`.security/dependency-audit/pre-change.md` | review=pending
+    - **Pre-change dependency audit:** state=pending | command=`dependency-security-audit change` | expected_json=`.security/dependency-audit/pre-change/latest.json` | expected_markdown=`.security/dependency-audit/pre-change/latest.md` | review=pending
     - **Resolution edit:** state=pending | expected_files=package.json, package-lock.json
     - **Project tests:** state=pending | expected_evidence=`npm install && npm run compile` exits 0
-    - **Post-change dependency audit:** state=pending | command=`dependency-security-audit change` | expected_json=`.security/dependency-audit/post-change.json` | expected_markdown=`.security/dependency-audit/post-change.md` | review=pending
+    - **Post-change dependency audit:** state=pending | command=`dependency-security-audit change` | expected_json=`.security/dependency-audit/post-change/latest.json` | expected_markdown=`.security/dependency-audit/post-change/latest.md` | review=pending
     - **Depends on:** none
     - **Stage:** 1
     - **Interfaces:** Consumes: none (first task in the feature); Produces: `package.json` (npm scripts `compile`, `watch`, `test`, `package`; `jsonTables.visualize` command + `editor/title` menu contribution), `tsconfig.json`, `esbuild.config.mjs` build pipeline producing `dist/extension.js` and `dist/webview/main.js`
@@ -153,21 +161,27 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
 - [ ] 3. Core Rendering and Parsing Logic
   - [ ] 3.1 Implement the View Model Builder
     - Create `src/viewModelBuilder.ts` exporting `buildViewModel(text: string): ViewModel`.
-      Consult the Current Technology Evidence entry for `jsonc-parser`'s stability note in
-      [`03_design.md`](03_design.md#current-technology-evidence) before finalizing the exact
-      `parseTree`/`ParseError`/`getLocation` calls (its API wasn't in Context7's index).
-    - Walk `jsonc-parser`'s parse tree into `JsonNode`s (`kind`, `key`/`index`, `value`,
-      `children`, `path` built as each node's key/index chain).
-    - If `parseTree` reports any `errors`, or the document is empty/whitespace-only, return
-      `{ status: "error", message, line, column }` via `getLocation` instead of any partial tree.
+      Consult the Current Technology Evidence entry for `jsonc-parser`'s corrected API note in
+      [`03_design.md`](03_design.md#current-technology-evidence) before writing the parse call
+      (its API wasn't in Context7's index, and an earlier draft of this design misdescribed
+      `getLocation` — do not use it for line/column).
+    - Call `parseTree(text, errors)` (errors is an out-parameter array you pass in and
+      `jsonc-parser` mutates — it is not the function's return value) and walk the returned
+      `Node` tree into `JsonNode`s (`kind`, `key`/`index`, `value`, `children`, `path` built as
+      each node's key/index chain).
+    - If the `errors` array is non-empty after the call, or the document is empty/whitespace-only,
+      return `{ status: "error", message, line, column }` instead of any partial tree. Derive
+      `line`/`column` from the first error's `offset` with a small local helper that counts `\n`
+      characters in `text` up to that offset — not `jsonc-parser`'s `getLocation` (which resolves
+      a JSON path segment at an offset, for completion/hover providers, and has no line/column
+      output).
     - **Files:** `src/viewModelBuilder.ts`
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 2.1
     - **Stage:** 3
-    - **Interfaces:** Consumes: `JsonNode`/`ViewModel`/`NodeKind` types from 2.1,
-      `jsonc-parser`'s `parseTree`/`getLocation`; Produces: `buildViewModel(text): ViewModel`,
-      consumed by task 4.1
+    - **Interfaces:** Consumes: `JsonNode`/`ViewModel`/`NodeKind` types from 2.1, `jsonc-parser`'s
+      `parseTree`; Produces: `buildViewModel(text): ViewModel`, consumed by task 4.1
     - **Documentation:** doc comment on `buildViewModel` stating its error-vs-tree contract (never
       returns a partial tree alongside errors)
     - **Verification:** unit tests (`src/viewModelBuilder.test.ts`) covering an object, an array
@@ -198,8 +212,9 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Documentation:** doc comment on `TreeNode` stating the depth-2 default-expansion rule and
       that `expandedPaths` is owned by the caller, not local state
     - **Verification:** component test (`src/webview/TreeView.test.tsx` via
-      `preact-render-to-string`) asserting depth-2 default expansion, independent per-node
-      toggling, and the `data-kind` attribute per value type
+      `@testing-library/preact` against a `jsdom` environment) asserting depth-2 default
+      expansion, independent per-node toggling via simulated clicks, and the `data-kind`
+      attribute per value type
     - **Estimated effort:** 2-3 hours
     - **Risk:** low
     - **Task category:** code_analysis
@@ -223,9 +238,10 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       consumed by task 4.2's `App`
     - **Documentation:** doc comment on `ColumnView` stating why scalar selection never extends
       `selectedPath` (mutual exclusivity with the detail pane)
-    - **Verification:** component test asserting drill-down appends exactly one column per
-      object/array selection, scalar selection never appends a column, and a resize drag updates
-      only the dragged column's width
+    - **Verification:** component test (`@testing-library/preact` + `jsdom`) asserting drill-down
+      appends exactly one column per object/array selection, scalar selection never appends a
+      column, and a simulated `pointerdown`/`pointermove`/`pointerup` drag sequence updates only
+      the dragged column's width
     - **Estimated effort:** 2-3 hours
     - **Risk:** medium; the only component with pointer-drag interaction
     - **Task category:** code_analysis
@@ -295,6 +311,14 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       "dist", "webview")]`, and HTML with a nonce-based CSP (`default-src 'none'; script-src
       'nonce-<nonce>'; style-src 'nonce-<nonce>'`) — confirm this exact pattern against
       [`03_design.md`](03_design.md#current-technology-evidence) before writing it.
+    - The generated HTML must convert both `dist/webview/main.js` and its sibling
+      `dist/webview/main.css` (esbuild's default output for `main.tsx`'s `theme.css` import, per
+      task 1.1) through `panel.webview.asWebviewUri(Uri.joinPath(context.extensionUri, "dist",
+      "webview", ...))` — `localResourceRoots` only whitelists the directory, it does not itself
+      rewrite paths — and reference the CSS via a nonce-carrying `<link rel="stylesheet"
+      nonce="<nonce>" href="...">` tag alongside the nonce'd `<script>` tag. Under `default-src
+      'none'`, any stylesheet not wired in this way is silently dropped, breaking the
+      theme-driven coloring properties (found by `plan-harden`'s preflight review).
     - `sendInit` calls `buildViewModel`, reads `context.globalState.get("jsonTables.lastViewMode",
       "tree")`, and posts `{ type: "init", viewModel, viewMode }`.
     - `onDocumentChanged` (wired through task 2.2's `watchDocument`) rebuilds via
@@ -346,9 +370,10 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       types from 2.1; Produces: `App` component, mounted by task 5.2's `main.tsx`
     - **Documentation:** doc comment on `App` stating the message-handling contract (which
       incoming `type`s it accepts, which outgoing `type`s it emits)
-    - **Verification:** component test covering: error-state renders the inline banner and no
-      view; `init`/`update` messages update `viewModel`; toggling view mode re-renders without
-      re-requesting data; expand-all/collapse-all mutate the full `expandedPaths` set
+    - **Verification:** component test (`@testing-library/preact` + `jsdom`) covering: error-state
+      renders the inline banner and no view; simulated `init`/`update` `window.postMessage` events
+      update `viewModel`; simulated toggle clicks re-render without re-requesting data;
+      expand-all/collapse-all clicks mutate the full `expandedPaths` set
     - **Estimated effort:** 2-3 hours
     - **Risk:** medium; composes every other webview component and owns all client-side state
     - **Task category:** code_analysis

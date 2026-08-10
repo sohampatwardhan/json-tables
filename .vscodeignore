@@ -1,0 +1,11 @@
+.specs/**
+src/**
+.security/**
+.git/**
+.gitignore
+.vscodeignore
+esbuild.config.mjs
+tsconfig.json
+**/*.test.ts
+**/*.test.tsx
+**/*.map
