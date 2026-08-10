@@ -114,6 +114,7 @@ button {
   flex: 1;
   min-height: 0;
   height: 100%;
+  width: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -125,6 +126,7 @@ button {
   overflow: auto;
   flex: 1;
   min-height: 0;
+  width: 100%;
 }
 .tree-node__toggle {
   display: inline-flex;
@@ -252,12 +254,14 @@ button {
   color: var(--vscode-descriptionForeground);
 }
 
-/* Table View — Key-Value Layout */
+/* Table View — Key-Value Layout (Responsive to window/pane width) */
 .table-view-container {
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: auto;
   flex: 1;
   min-height: 0;
   width: 100%;
+  max-width: 100%;
   height: 100%;
   box-sizing: border-box;
   background: var(--vscode-editor-background);
@@ -265,6 +269,7 @@ button {
 
 .kv-container {
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -272,12 +277,14 @@ button {
   display: flex;
   border-bottom: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
   width: 100%;
+  max-width: 100%;
   min-height: 32px;
+  box-sizing: border-box;
 }
 
 .kv-key {
-  width: 140px;
-  min-width: 140px;
+  width: clamp(90px, 18%, 180px);
+  min-width: 90px;
   max-width: 220px;
   flex-shrink: 0;
   padding: 8px 12px;
@@ -289,17 +296,22 @@ button {
   display: flex;
   align-items: flex-start;
   word-break: break-word;
+  box-sizing: border-box;
 }
 
 .kv-value {
   flex: 1;
   min-width: 0;
+  width: 100%;
   padding: 8px 12px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  align-items: flex-start;
+  align-items: stretch;
   overflow-x: auto;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .val-mono {
@@ -307,12 +319,17 @@ button {
   font-size: var(--vscode-editor-font-size, 12px);
   white-space: pre-wrap;
   word-break: break-word;
+  overflow-wrap: anywhere;
+  display: inline-block;
+  max-width: 100%;
 }
 
-/* Nested tables */
+/* Nested tables — Expand dynamically to available pane width */
 .table-view__nested {
   margin: 0;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .table-view__toggle {
@@ -353,23 +370,26 @@ button {
 .table-view__nested-table {
   border-collapse: collapse;
   font-size: 12px;
-  width: auto;
-  min-width: 240px;
+  width: 100%;
   max-width: 100%;
+  table-layout: auto;
   margin-top: 2px;
   border: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.25));
   background: var(--vscode-editor-background);
+  box-sizing: border-box;
 }
 
 .nested-key {
   padding: 4px 8px;
   border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
   font-weight: 500;
-  white-space: nowrap;
   vertical-align: top;
   background: var(--vscode-sideBarSectionHeader-background, rgba(59, 130, 246, 0.08));
   color: var(--vscode-descriptionForeground);
-  width: 1%;
+  width: clamp(70px, 18%, 150px);
+  max-width: 160px;
+  word-break: break-word;
+  box-sizing: border-box;
 }
 
 .nested-value {
@@ -377,14 +397,19 @@ button {
   border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
   vertical-align: top;
   background: rgba(245, 158, 11, 0.02);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
 }
 
 /* Array Grid (Table mode for arrays of objects) */
 .table-view__grid {
   border-collapse: collapse;
   width: 100%;
+  max-width: 100%;
   font-size: 12px;
   border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
+  box-sizing: border-box;
 }
 
 .table-view__grid th {
@@ -395,12 +420,16 @@ button {
   font-weight: 600;
   text-align: left;
   white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .table-view__grid td {
   padding: 4px 8px;
   border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
   vertical-align: top;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
 }
 
 .table-view__empty {
@@ -410,6 +439,8 @@ button {
 
 .table-view__scalar-root {
   padding: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Error banner (App root) */
