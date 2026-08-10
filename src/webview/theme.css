@@ -338,12 +338,10 @@ button {
 
 /* Table View — Key-Value Layout (Responsive to window/pane width) */
 .table-view-container {
-  overflow-y: auto;
-  overflow-x: auto;
+  overflow: auto;
   flex: 1;
   min-height: 0;
   width: 100%;
-  max-width: 100%;
   height: 100%;
   box-sizing: border-box;
   background: var(--vscode-editor-background);
@@ -352,7 +350,6 @@ button {
 .kv-container {
   width: fit-content;
   min-width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -360,7 +357,7 @@ button {
   display: flex;
   border-bottom: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
   width: 100%;
-  max-width: 100%;
+  min-width: fit-content;
   min-height: 32px;
   box-sizing: border-box;
 }
@@ -390,7 +387,6 @@ button {
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  overflow-x: auto;
   box-sizing: border-box;
   overflow-wrap: break-word;
   word-break: normal;
@@ -407,12 +403,10 @@ button {
   max-width: 100%;
 }
 
-/* Nested tables — Fit content width naturally, compact with horizontal scrolling when needed */
+/* Nested tables — Fit content width naturally */
 .table-view__nested {
   margin: 0;
   width: fit-content;
-  max-width: 100%;
-  overflow-x: auto;
   box-sizing: border-box;
 }
 
@@ -456,7 +450,6 @@ button {
   font-size: 12px;
   width: fit-content;
   min-width: fit-content;
-  max-width: 100%;
   table-layout: auto;
   margin-top: 2px;
   border: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.25));
@@ -498,7 +491,6 @@ button {
   border-collapse: collapse;
   width: fit-content;
   min-width: fit-content;
-  max-width: 100%;
   font-size: 12px;
   border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
   box-sizing: border-box;
