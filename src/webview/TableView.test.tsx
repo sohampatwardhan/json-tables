@@ -1,7 +1,7 @@
 import "./testSetup.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { render, cleanup } from "@testing-library/preact";
+import { render, cleanup, fireEvent } from "@testing-library/preact";
 import { TableView } from "./TableView.tsx";
 import type { JsonNode } from "../shared/types.ts";
 
@@ -81,6 +81,80 @@ test("renders a nested object and array as nested tables showing key-value pairs
   assert.ok(nestedTables.length >= 2, "renders nested tables for nested container nodes");
   assert.ok(container.textContent?.includes("London"), "nested object content renders inline as key-value pairs");
   assert.ok(container.textContent?.includes('"a"'), "nested array content renders inline");
+  cleanup();
+});
+
+test("collapses nested table when not in expandedPaths", () => {
+  const node: JsonNode = {
+    kind: "object",
+    path: [],
+    children: [
+      {
+        kind: "object",
+        key: "address",
+        path: ["address"],
+        children: [{ kind: "string", key: "city", path: ["address", "city"], value: "London" }],
+      },
+    ],
+  };
+  const { container } = render(<TableView node={node} expandedPaths={new Set()} />);
+  const nestedTable = container.querySelector(".table-view__nested table");
+  assert.equal(nestedTable, null, "nested table should be collapsed");
+  const toggle = container.querySelector(".table-view__toggle");
+  assert.ok(toggle, "toggle button should be present");
+  cleanup();
+});
+
+test("hides badges on expanded tables when showBadges is false", () => {
+  const node: JsonNode = {
+    kind: "object",
+    path: [],
+    children: [
+      {
+        kind: "object",
+        key: "address",
+        path: ["address"],
+        children: [{ kind: "string", key: "city", path: ["address", "city"], value: "London" }],
+      },
+    ],
+  };
+  const { container } = render(
+    <TableView node={node} expandedPaths={new Set(["address"])} showBadges={false} />,
+  );
+  const toggle = container.querySelector(".table-view__toggle");
+  assert.equal(toggle, null, "toggle button badge should be hidden when showBadges is false");
+  const nestedTable = container.querySelector(".table-view__nested table");
+  assert.ok(nestedTable, "nested table remains visible");
+  cleanup();
+});
+
+test("calls onToggle when toggle button is clicked", () => {
+  const node: JsonNode = {
+    kind: "object",
+    path: [],
+    children: [
+      {
+        kind: "object",
+        key: "address",
+        path: ["address"],
+        children: [{ kind: "string", key: "city", path: ["address", "city"], value: "London" }],
+      },
+    ],
+  };
+  let toggledKey = "";
+  const { container } = render(
+    <TableView
+      node={node}
+      expandedPaths={new Set(["address"])}
+      onToggle={(key) => {
+        toggledKey = key;
+      }}
+    />,
+  );
+  const toggle = container.querySelector(".table-view__toggle");
+  assert.ok(toggle);
+  fireEvent.click(toggle);
+  assert.equal(toggledKey, "address");
   cleanup();
 });
 

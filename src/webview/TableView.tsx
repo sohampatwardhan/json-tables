@@ -1,22 +1,29 @@
-import { useState } from "preact/hooks";
 import type { JsonNode } from "../shared/types.ts";
 import { EditableKey, EditableValue } from "./EditableItem.tsx";
+import { pathKey } from "./TreeView.tsx";
 
 interface EditProps {
   onEditValue?: (path: string[], value: any) => void;
   onRenameKey?: (path: string[], newKey: string) => void;
 }
 
+interface CommonTableProps extends EditProps {
+  expandedPaths?: Set<string>;
+  onToggle?: (key: string) => void;
+  showBadges?: boolean;
+}
+
 /** Renders any node's value as a cell: an expandable nested table for objects/arrays, scalar text otherwise. */
 function Cell({
   node,
+  expandedPaths,
+  onToggle,
+  showBadges = true,
   onEditValue,
   onRenameKey,
 }: {
   node: JsonNode;
-} & EditProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
+} & CommonTableProps) {
   if (node.kind === "object" || node.kind === "array") {
     const count = node.children?.length ?? 0;
     if (count === 0) {
@@ -26,24 +33,36 @@ function Cell({
         </span>
       );
     }
+    const key = pathKey(node.path);
+    const isExpanded = expandedPaths ? expandedPaths.has(key) : true;
+
     return (
       <div class="table-view__nested">
-        <button
-          type="button"
-          class="table-view__toggle"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          title={isCollapsed ? "Expand nested table" : "Collapse nested table"}
-          aria-expanded={!isCollapsed}
-        >
-          <span class={`table-view__chevron ${isCollapsed ? "" : "table-view__chevron--expanded"}`}>
-            {"›"}
-          </span>
-          <span class="table-view__badge" data-kind={node.kind}>
-            {node.kind === "array" ? `[${count}]` : `{${count}}`}
-          </span>
-        </button>
-        {!isCollapsed && (
-          <NestedTable node={node} onEditValue={onEditValue} onRenameKey={onRenameKey} />
+        {(showBadges || !isExpanded) && (
+          <button
+            type="button"
+            class="table-view__toggle"
+            onClick={() => onToggle?.(key)}
+            title={isExpanded ? "Collapse nested table" : "Expand nested table"}
+            aria-expanded={isExpanded}
+          >
+            <span class={`table-view__chevron ${isExpanded ? "table-view__chevron--expanded" : ""}`}>
+              {"›"}
+            </span>
+            <span class="table-view__badge" data-kind={node.kind}>
+              {node.kind === "array" ? `[${count}]` : `{${count}}`}
+            </span>
+          </button>
+        )}
+        {isExpanded && (
+          <NestedTable
+            node={node}
+            expandedPaths={expandedPaths}
+            onToggle={onToggle}
+            showBadges={showBadges}
+            onEditValue={onEditValue}
+            onRenameKey={onRenameKey}
+          />
         )}
       </div>
     );
@@ -63,18 +82,31 @@ function Cell({
 /** Renders a nested table for nested objects/arrays inside a key-value value cell or grid cell. */
 export function NestedTable({
   node,
+  expandedPaths,
+  onToggle,
+  showBadges = true,
   onEditValue,
   onRenameKey,
 }: {
   node: JsonNode;
-} & EditProps) {
+} & CommonTableProps) {
   const isArrayOfObjects =
     node.kind === "array" &&
     (node.children?.length ?? 0) > 0 &&
     (node.children ?? []).every((child) => child.kind === "object");
 
   if (isArrayOfObjects) {
-    return <ArrayGrid node={node} isNested={true} onEditValue={onEditValue} onRenameKey={onRenameKey} />;
+    return (
+      <ArrayGrid
+        node={node}
+        isNested={true}
+        expandedPaths={expandedPaths}
+        onToggle={onToggle}
+        showBadges={showBadges}
+        onEditValue={onEditValue}
+        onRenameKey={onRenameKey}
+      />
+    );
   }
 
   return (
@@ -92,7 +124,14 @@ export function NestedTable({
                 )}
               </td>
               <td class="nested-value">
-                <Cell node={child} onEditValue={onEditValue} onRenameKey={onRenameKey} />
+                <Cell
+                  node={child}
+                  expandedPaths={expandedPaths}
+                  onToggle={onToggle}
+                  showBadges={showBadges}
+                  onEditValue={onEditValue}
+                  onRenameKey={onRenameKey}
+                />
               </td>
             </tr>
           );
@@ -108,11 +147,14 @@ export function NestedTable({
  */
 export function KeyValueView({
   node,
+  expandedPaths,
+  onToggle,
+  showBadges = true,
   onEditValue,
   onRenameKey,
 }: {
   node: JsonNode;
-} & EditProps) {
+} & CommonTableProps) {
   return (
     <div class="table-view__kv kv-container">
       {(node.children ?? []).map((child, index) => {
@@ -127,7 +169,14 @@ export function KeyValueView({
               )}
             </div>
             <div class="kv-value">
-              <Cell node={child} onEditValue={onEditValue} onRenameKey={onRenameKey} />
+              <Cell
+                node={child}
+                expandedPaths={expandedPaths}
+                onToggle={onToggle}
+                showBadges={showBadges}
+                onEditValue={onEditValue}
+                onRenameKey={onRenameKey}
+              />
             </div>
           </div>
         );
@@ -144,12 +193,15 @@ export function KeyValueView({
 export function ArrayGrid({
   node,
   isNested,
+  expandedPaths,
+  onToggle,
+  showBadges = true,
   onEditValue,
   onRenameKey,
 }: {
   node: JsonNode;
   isNested?: boolean;
-} & EditProps) {
+} & CommonTableProps) {
   const elements = node.children ?? [];
   const headers: string[] = [];
   const seen = new Set<string>();
@@ -181,7 +233,14 @@ export function ArrayGrid({
               return (
                 <td key={header}>
                   {field ? (
-                    <Cell node={field} onEditValue={onEditValue} onRenameKey={onRenameKey} />
+                    <Cell
+                      node={field}
+                      expandedPaths={expandedPaths}
+                      onToggle={onToggle}
+                      showBadges={showBadges}
+                      onEditValue={onEditValue}
+                      onRenameKey={onRenameKey}
+                    />
                   ) : null}
                 </td>
               );
@@ -199,15 +258,25 @@ export function ArrayGrid({
  */
 export function TableView({
   node,
+  expandedPaths,
+  onToggle,
+  showBadges = true,
   onEditValue,
   onRenameKey,
 }: {
   node: JsonNode;
-} & EditProps) {
+} & CommonTableProps) {
   if (node.kind !== "object" && node.kind !== "array") {
     return (
       <div class="table-view__scalar-root">
-        <Cell node={node} onEditValue={onEditValue} onRenameKey={onRenameKey} />
+        <Cell
+          node={node}
+          expandedPaths={expandedPaths}
+          onToggle={onToggle}
+          showBadges={showBadges}
+          onEditValue={onEditValue}
+          onRenameKey={onRenameKey}
+        />
       </div>
     );
   }
@@ -216,7 +285,25 @@ export function TableView({
     (node.children?.length ?? 0) > 0 &&
     (node.children ?? []).every((child) => child.kind === "object");
   if (isArrayOfObjects) {
-    return <ArrayGrid node={node} onEditValue={onEditValue} onRenameKey={onRenameKey} />;
+    return (
+      <ArrayGrid
+        node={node}
+        expandedPaths={expandedPaths}
+        onToggle={onToggle}
+        showBadges={showBadges}
+        onEditValue={onEditValue}
+        onRenameKey={onRenameKey}
+      />
+    );
   }
-  return <KeyValueView node={node} onEditValue={onEditValue} onRenameKey={onRenameKey} />;
+  return (
+    <KeyValueView
+      node={node}
+      expandedPaths={expandedPaths}
+      onToggle={onToggle}
+      showBadges={showBadges}
+      onEditValue={onEditValue}
+      onRenameKey={onRenameKey}
+    />
+  );
 }

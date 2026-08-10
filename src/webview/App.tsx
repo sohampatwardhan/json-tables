@@ -13,7 +13,7 @@ interface AppProps {
 
 /**
  * The webview's root component. Owns all client-side state (`viewModel`, `viewMode`,
- * `expandedPaths`, Column view's `selectedPath`) and the `window` message listener that receives
+ * `expandedPaths`, Column view's `selectedPath`, `showTableBadges`) and the `window` message listener that receives
  * `HostMessage`s from the extension host. Emits `viewModeChanged` back to the host on every
  * toggle so the next panel opened in this VS Code installation can default to it, as well as
  * `editValue` and `renameKey` when the user edits data in any of the views.
@@ -23,6 +23,7 @@ export function App({ postMessage }: AppProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("tree");
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
   const [selectedPath, setSelectedPath] = useState<string[]>([]);
+  const [showTableBadges, setShowTableBadges] = useState(true);
 
   useEffect(() => {
     function onMessage(event: MessageEvent<HostMessage>) {
@@ -97,7 +98,7 @@ export function App({ postMessage }: AppProps) {
             {mode}
           </button>
         ))}
-        {viewMode === "tree" && (
+        {(viewMode === "tree" || viewMode === "table") && (
           <>
             <div class="app__toolbar-divider" />
             <button type="button" onClick={handleExpandAll}>
@@ -106,6 +107,14 @@ export function App({ postMessage }: AppProps) {
             <button type="button" onClick={handleCollapseAll}>
               Collapse all
             </button>
+            {viewMode === "table" && (
+              <button
+                type="button"
+                onClick={() => setShowTableBadges(!showTableBadges)}
+              >
+                {showTableBadges ? "Hide badges" : "Show badges"}
+              </button>
+            )}
           </>
         )}
       </div>
@@ -134,6 +143,9 @@ export function App({ postMessage }: AppProps) {
           <div class="table-view-container">
             <TableView
               node={viewModel.root}
+              expandedPaths={expandedPaths}
+              onToggle={handleToggle}
+              showBadges={showTableBadges}
               onEditValue={handleEditValue}
               onRenameKey={handleRenameKey}
             />

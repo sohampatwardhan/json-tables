@@ -5,6 +5,12 @@ All notable changes to the **JSON Tables** extension will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-08-10
+
+### Added
+- **Table View Expand All & Collapse All**: Toolbar controls for Table view mode to recursively expand or collapse all nested tables and objects at once.
+- **Show/Hide Badges Toggle**: Added a toolbar toggle to show or hide the per-table expand/collapse chevron count badges (`▼ {count}`), allowing a clean, seamless embedded table layout.
+
 ## [0.1.1] - 2026-08-10
 
 ### Changed

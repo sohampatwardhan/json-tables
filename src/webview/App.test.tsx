@@ -139,3 +139,33 @@ test("renaming a key emits a renameKey message to postMessage", () => {
   cleanup();
 });
 
+test("table view toolbar provides Expand all, Collapse all, and Show/Hide badges buttons", () => {
+  const { container } = render(<App postMessage={mock.fn()} />);
+  sendHostMessage({ type: "init", viewMode: "table", viewModel: { status: "ok", root: sampleTree } });
+
+  const collapseAll = Array.from(container.querySelectorAll("button")).find(
+    (el) => el.textContent === "Collapse all",
+  );
+  assert.ok(collapseAll, "Collapse all button present in Table view");
+  fireEvent.click(collapseAll as Element);
+  assert.equal(container.querySelectorAll(".table-view__nested table").length, 0, "all nested tables collapsed");
+
+  const expandAll = Array.from(container.querySelectorAll("button")).find(
+    (el) => el.textContent === "Expand all",
+  );
+  assert.ok(expandAll, "Expand all button present in Table view");
+  fireEvent.click(expandAll as Element);
+  assert.ok(container.querySelectorAll(".table-view__nested table").length > 0, "nested tables expanded");
+
+  const hideBadges = Array.from(container.querySelectorAll("button")).find(
+    (el) => el.textContent === "Hide badges",
+  );
+  assert.ok(hideBadges, "Hide badges button present in Table view");
+  fireEvent.click(hideBadges as Element);
+  assert.equal(container.querySelector(".table-view__toggle"), null, "badges are hidden");
+  assert.ok(
+    Array.from(container.querySelectorAll("button")).some((el) => el.textContent === "Show badges"),
+  );
+  cleanup();
+});
+
