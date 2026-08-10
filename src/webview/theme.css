@@ -338,7 +338,8 @@ button {
 
 /* Table View — Key-Value Layout (Responsive to window/pane width) */
 .table-view-container {
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
   min-height: 0;
   width: 100%;
@@ -348,8 +349,8 @@ button {
 }
 
 .kv-container {
-  width: fit-content;
-  min-width: 100%;
+  width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -357,15 +358,15 @@ button {
   display: flex;
   border-bottom: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
   width: 100%;
-  min-width: fit-content;
+  max-width: 100%;
   min-height: 32px;
   box-sizing: border-box;
 }
 
 .kv-key {
-  width: auto;
-  min-width: 32px;
-  max-width: 220px;
+  width: 160px;
+  min-width: 160px;
+  max-width: 160px;
   flex-shrink: 0;
   padding: 8px 12px;
   background: var(--vscode-sideBar-background, rgba(128, 128, 128, 0.09));
@@ -375,7 +376,7 @@ button {
   border-right: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
   display: flex;
   align-items: flex-start;
-  white-space: nowrap;
+  word-break: break-word;
   box-sizing: border-box;
 }
 
@@ -387,6 +388,7 @@ button {
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
+  overflow-x: auto;
   box-sizing: border-box;
   overflow-wrap: break-word;
   word-break: break-word;
@@ -402,11 +404,12 @@ button {
   max-width: 100%;
 }
 
-/* Nested tables — Fit content width naturally */
+/* Nested tables — Fit content width naturally with per-table horizontal scroll when needed */
 .table-view__nested {
   margin: 0;
   width: fit-content;
   max-width: 100%;
+  overflow-x: auto;
   box-sizing: border-box;
 }
 
