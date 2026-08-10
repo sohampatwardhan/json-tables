@@ -91,8 +91,20 @@ export function ArrayGrid({ node }: { node: JsonNode }) {
   );
 }
 
-/** Chooses `ArrayGrid` for an array of objects, `KeyValueTable` otherwise (including plain arrays). */
+/**
+ * Chooses `ArrayGrid` for an array of objects, `KeyValueTable` for anything else with children
+ * (a plain object or array of scalars), or the value itself for a scalar root — a document whose
+ * top-level value is a bare number/string/boolean/null has no rows to iterate, and `KeyValueTable`
+ * would otherwise render a silently empty table with no visible value at all.
+ */
 export function TableView({ node }: { node: JsonNode }) {
+  if (node.kind !== "object" && node.kind !== "array") {
+    return (
+      <div class="table-view__scalar-root">
+        <Cell node={node} />
+      </div>
+    );
+  }
   const isArrayOfObjects =
     node.kind === "array" && (node.children ?? []).every((child) => child.kind === "object");
   if (isArrayOfObjects) {

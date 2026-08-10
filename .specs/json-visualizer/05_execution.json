@@ -7,6 +7,20 @@
       {
         "bars": [
           {
+            "end": "2026-08-10T13:53:39",
+            "id": "run_20260810T124656Z",
+            "label": "run-20260810T124656Z (checkpoint, 4003s)",
+            "start": "2026-08-10T12:46:56",
+            "tags": [
+              "done"
+            ]
+          }
+        ],
+        "name": "Execution Runs"
+      },
+      {
+        "bars": [
+          {
             "end": "2026-08-10T03:57:14",
             "id": "b_1_1_attempt1",
             "label": "1.1 attempt 1 (verified, 439s)",
@@ -136,13 +150,36 @@
           }
         ],
         "name": "Stage 5"
+      },
+      {
+        "bars": [
+          {
+            "end": "2026-08-10T13:46:05",
+            "id": "b_6_1_attempt1",
+            "label": "6.1 attempt 1 (verified, 54s)",
+            "start": "2026-08-10T13:45:11",
+            "tags": [
+              "done"
+            ]
+          },
+          {
+            "end": "2026-08-10T13:53:39",
+            "id": "b_6_2_attempt1",
+            "label": "6.2 attempt 1 (blocked, 454s)",
+            "start": "2026-08-10T13:46:05",
+            "tags": [
+              "crit"
+            ]
+          }
+        ],
+        "name": "Stage 6"
       }
     ],
     "target": "gantt"
   },
   "generated_from": {
     "file": "05_execution.md",
-    "sha256": "8dfceb40433c6c6e81777175ca70daaa97a960f8b373b0a40c00719b2c1037a1"
+    "sha256": "49b791dc36456ef50ffa88ae48e221b98fa3a7507977e2343b63518a5e2341cd"
   },
   "runs": [
     {
@@ -153,11 +190,11 @@
       "stopped_utc": "unknown"
     },
     {
-      "elapsed_seconds": "pending",
-      "outcome": "active",
+      "elapsed_seconds": 4003,
+      "outcome": "checkpoint",
       "run_id": "run-20260810T124656Z",
       "started_utc": "2026-08-10T12:46:56Z",
-      "stopped_utc": "pending"
+      "stopped_utc": "2026-08-10T13:53:39Z"
     }
   ],
   "schema_version": 1,
@@ -291,6 +328,26 @@
       "started_utc": "2026-08-10T13:03:15Z",
       "stopped_utc": "2026-08-10T13:09:51Z",
       "task": "5.2"
+    },
+    {
+      "attempt": 1,
+      "elapsed_seconds": 54,
+      "outcome": "verified",
+      "run_id": "run-20260810T124656Z",
+      "stage_wave": "Stage 6",
+      "started_utc": "2026-08-10T13:45:11Z",
+      "stopped_utc": "2026-08-10T13:46:05Z",
+      "task": "6.1"
+    },
+    {
+      "attempt": 1,
+      "elapsed_seconds": 454,
+      "outcome": "blocked",
+      "run_id": "run-20260810T124656Z",
+      "stage_wave": "Stage 6",
+      "started_utc": "2026-08-10T13:46:05Z",
+      "stopped_utc": "2026-08-10T13:53:39Z",
+      "task": "6.2"
     }
   ],
   "unresolved": [
@@ -298,11 +355,6 @@
       "id": "run-20260810T034356Z",
       "kind": "run",
       "reason": "interrupted"
-    },
-    {
-      "id": "run-20260810T124656Z",
-      "kind": "run",
-      "reason": "active"
     },
     {
       "id": "3.5#1",

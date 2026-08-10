@@ -91,8 +91,8 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       [`dist/webview/main.css`](../../dist/webview/main.css) alongside [`dist/webview/main.js`](../../dist/webview/main.js) when [`src/webview/main.tsx`](../../src/webview/main.tsx)
       imports `theme.css` (task 5.2) — task 4.1's webview HTML generation links this output.
     - Also add `license: "MIT"` and `icon: "media/icon.png"` to [`package.json`](../../package.json) now, since this
-      task is the file's sole owner across the plan — task 6.2 creates the referenced `LICENSE`
-      and `media/icon.png` files later without needing to touch [`package.json`](../../package.json) itself (avoids a
+      task is the file's sole owner across the plan — task 6.2 creates the referenced [`LICENSE`](../../LICENSE)
+      and [`media/icon.png`](../../media/icon.png) files later without needing to touch [`package.json`](../../package.json) itself (avoids a
       later task falsely reading as a second dependency-resolution owner of the manifest).
     - In the same [`package.json`](../../package.json), add `contributes.commands` for `jsonTables.visualize`
       ("Visualize JSON") and `contributes.menus["editor/title"]` with `"when": "resourceLangId
@@ -302,6 +302,12 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       than crashing on a missing `key`.
     - Any cell whose value is itself an object/array renders a `PreviewBadge` (`"{n}"`/`"[n]"`)
       instead of the nested content.
+    - **Amended during task 6.2's fixture preparation:** a scalar-root document (bare
+      `number`/`string`/`boolean`/`null` at the top level, e.g. the `scalar-only.json` fixture)
+      rendered a silently empty `<table>` in Table view with no visible value at all —
+      `KeyValueTable`/`ArrayGrid` both iterate `node.children`, which a scalar root never has.
+      `TableView` now renders the value directly (via the existing `Cell` component) for any node
+      that isn't an object/array, before routing to either table renderer.
     - **Files:** [`src/webview/TableView.tsx`](../../src/webview/TableView.tsx), [`src/webview/TableView.test.tsx`](../../src/webview/TableView.test.tsx)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
@@ -312,7 +318,8 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Documentation:** doc comment stating the object-vs-array-of-objects row-shape contract and
       why nested values always render as a badge, never inline
     - **Verification:** component test covering a plain object, an array of objects with
-      heterogeneous keys (union headers), and a nested object/array cell rendering as a badge
+      heterogeneous keys (union headers), a nested object/array cell rendering as a badge, a
+      plain array of scalars, and (added post-fix) a scalar-root document — 5 tests, all passing
     - **Estimated effort:** 2-3 hours
     - **Risk:** low
     - **Task category:** code_analysis
@@ -513,12 +520,18 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - _Requirements: 6.2_
 
 - [ ] 6. Checkpoint — feature complete, ready for personal-use packaging
-  - [ ] 6.1 Verify the read-only guarantee across the whole codebase
-    - Grep [`src/`](../../src) for `applyEdit`, `TextEditor.edit`, `WorkspaceEdit`, and `contenteditable`;
-      confirm zero matches outside of comments/tests.
-    - Manually inspect every rendered value site in `TreeView.tsx`, `ColumnView.tsx`, and
-      `TableView.tsx` to confirm none is an `<input>`, `<textarea>`, or `contenteditable`
-      element.
+  - [x] 6.1 Verify the read-only guarantee across the whole codebase
+    - Grep [`src/`](../../src) for `applyEdit`, `TextEditor.edit`, `WorkspaceEdit`, and `contenteditable`
+      (case-insensitive, also covering `contentEditable`, `<input`, `<textarea`); confirm zero
+      matches outside of comments/tests. Result: the only match is a doc comment in
+      [`src/panelController.ts`](../../src/panelController.ts) explicitly stating that this class
+      never calls those APIs — zero actual usages anywhere.
+    - Manually inspect every rendered value site in [`TreeView.tsx`](../../src/webview/TreeView.tsx),
+      [`ColumnView.tsx`](../../src/webview/ColumnView.tsx), and
+      [`TableView.tsx`](../../src/webview/TableView.tsx) to confirm none is an `<input>`,
+      `<textarea>`, or `contenteditable` element. Result: the full element set across all three is
+      `div`/`span`/`button`/`ul`/`li`/`table`/`thead`/`tbody`/`tr`/`th`/`td` — no editable element
+      anywhere.
     - **Files:** none (verification only; no files owned)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
@@ -527,8 +540,9 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Interfaces:** Consumes: the completed source tree from tasks 2.1-5.2; Produces: a pass/fail
       verification record for Property 18 in [`03_design.md`](03_design.md#correctness-properties)
     - **Documentation:** no public surface (review task)
-    - **Verification:** the grep above returns no matches, and the manual element inspection
-      confirms no editable element exists in any of the three view components
+    - **Verification:** the grep above returns no matches (outside one confirming doc comment),
+      and the manual element inspection confirms no editable element exists in any of the three
+      view components — **PASS**
     - **Estimated effort:** 30-45 minutes
     - **Risk:** medium; a failure here means the read-only architectural guarantee was violated
       somewhere upstream and the offending task must be revisited
@@ -537,28 +551,45 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - _Requirements: 9.1, 9.2_
 
   - [ ] 6.2 Package the extension and run the end-to-end walkthrough
-    - Add `README.md`, `LICENSE`, and the icon image at `media/icon.png` (the `icon`/`license`
-      fields in [`package.json`](../../package.json) pointing at them were already added in task 1.1, which owns that
-      file). None of this requires a registered publisher id.
-    - Run `npm run compile` then `npx vsce package` to produce a `.vsix`; install it into a local
-      VS Code instance via "Install from VSIX...".
+    - Add [`README.md`](../../README.md), [`LICENSE`](../../LICENSE), and the icon image at
+      [`media/icon.png`](../../media/icon.png) (the `icon`/[`license`](../../license) fields in
+      [`package.json`](../../package.json) pointing at them were already added in task 1.1,
+      which owns that file). None of this requires a registered publisher id.
+    - Run `npm run compile -- --production` then `npx vsce package` to produce a `.vsix`; install
+      it into a local VS Code instance via "Install from VSIX..." (or `code
+      --install-extension`).
     - Manually walk through: object-only, array-of-objects, deeply nested (depth > 2), scalar-only,
       and malformed JSON fixtures, in both a light and a dark built-in theme, exercising the full
       open → view-mode-switch → edit-and-refresh → close lifecycle, from both the Extension
       Development Host and the installed `.vsix`.
-    - **Files:** `README.md`, `LICENSE`, `media/icon.png`
+    - **Done in this environment (no GUI available):** [`README.md`](../../README.md)/[`LICENSE`](../../LICENSE)/[`media/icon.png`](../../media/icon.png)
+      created; `npx vsce package` succeeded with no publisher-account error, producing
+      [`json-tables-0.1.0.vsix`](../../json-tables-0.1.0.vsix) (9 files: [`package.json`](../../package.json), [`readme.md`](../../readme.md), `LICENSE.txt`,
+      [`dist/extension.js`](../../dist/extension.js), [`dist/webview/main.js`](../../dist/webview/main.js), [`dist/webview/main.css`](../../dist/webview/main.css), [`media/icon.png`](../../media/icon.png) —
+      matching task 1.1's confirmed `vsce ls` file list plus the three new files); installed via
+      `code --install-extension`. While preparing the scalar-only fixture, found and fixed a real
+      gap: `TableView` rendered a silently empty table for a scalar-root document (see task 3.4's
+      amendment) — re-verified with all 34 tests before repackaging.
+    - **Still needs a human with a VS Code GUI:** the actual interactive walkthrough (opening
+      each fixture, switching view modes, editing while the panel is open, checking both
+      themes). Five fixtures are ready at `/private/tmp/claude-501/-Users-soham-GitRepos-json-tables/783adb19-77c7-4900-9c97-7b57ac4e988b/scratchpad/fixtures/`
+      (`object-only.json`, `array-of-objects.json`, `deeply-nested.json`, `scalar-only.json`,
+      `malformed.json`). This task stays unchecked until that walkthrough is confirmed — checking
+      it off without it would assert a verification that didn't actually happen.
+    - **Files:** [`README.md`](../../README.md), [`LICENSE`](../../LICENSE), [`media/icon.png`](../../media/icon.png)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 5.1, 5.2
     - **Stage:** 6
     - **Interfaces:** Consumes: the completed, compiled extension from tasks 1.1-5.2; Produces: an
       installable `.vsix` file and a recorded walkthrough result
-    - **Documentation:** `README.md` documents the command, the three view modes, and that no
+    - **Documentation:** [`README.md`](../../README.md) documents the command, the three view modes, and that no
       publisher account/Marketplace listing exists yet (per discovery's deferred-publisher
       decision)
-    - **Verification:** `npx vsce package` exits 0 without a publisher-account error; the
-      installed `.vsix` shows the same editor-title button and panel behavior as the Extension
-      Development Host across every fixture/theme combination above
+    - **Verification:** `npx vsce package` exits 0 without a publisher-account error (confirmed);
+      the installed `.vsix` shows the same editor-title button and panel behavior as the
+      Extension Development Host across every fixture/theme combination above (pending human
+      confirmation)
     - **Estimated effort:** 1.5-2.5 hours
     - **Risk:** low; packaging-only, no new application logic
     - **Task category:** review

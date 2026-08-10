@@ -69,7 +69,7 @@ view, or a Key-Value/Table view — without leaving the source file or risking a
 - Must adopt VS Code's own theme variables (`--vscode-*` CSS custom properties) rather than a
   fixed design system, so the visualization matches whatever color theme the user has active —
   a stricter requirement than THRIVE's OS-level `prefers-color-scheme` toggle.
-- Must be structured for a future Marketplace publish (`LICENSE`, `README`, icon, semantic
+- Must be structured for a future Marketplace publish ([`LICENSE`](../../LICENSE), `README`, icon, semantic
   versioning) even though v1 has no publisher account and is installed locally by the author.
 
 **Success measures:**

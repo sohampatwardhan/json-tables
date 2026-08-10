@@ -35,7 +35,7 @@
 | Run ID | Started UTC | Stopped UTC | Elapsed Seconds | Outcome |
 |---|---|---|---:|---|
 | run-20260810T034356Z | 2026-08-10T03:43:56Z | unknown | unknown | interrupted |
-| run-20260810T124656Z | 2026-08-10T12:46:56Z | pending | pending | active |
+| run-20260810T124656Z | 2026-08-10T12:46:56Z | 2026-08-10T13:53:39Z | 4003 | checkpoint |
 
 ### Task Attempt Intervals
 | Run ID | Stage/Wave | Task | Attempt | Started UTC | Stopped UTC | Elapsed Seconds | Outcome |
@@ -53,6 +53,8 @@
 | run-20260810T124656Z | Stage 4 | 4.2 | 1 | 2026-08-10T12:57:21Z | 2026-08-10T12:59:53Z | 152 | verified |
 | run-20260810T124656Z | Stage 5 | 5.1 | 1 | 2026-08-10T13:02:11Z | 2026-08-10T13:03:15Z | 64 | verified |
 | run-20260810T124656Z | Stage 5 | 5.2 | 1 | 2026-08-10T13:03:15Z | 2026-08-10T13:09:51Z | 396 | verified |
+| run-20260810T124656Z | Stage 6 | 6.1 | 1 | 2026-08-10T13:45:11Z | 2026-08-10T13:46:05Z | 54 | verified |
+| run-20260810T124656Z | Stage 6 | 6.2 | 1 | 2026-08-10T13:46:05Z | 2026-08-10T13:53:39Z | 454 | blocked |
 
 ### Execution Gantt
 
@@ -60,6 +62,8 @@
 gantt
     dateFormat YYYY-MM-DDTHH:mm:ss
     axisFormat %m-%d %H:%M
+    section Execution Runs
+    run-20260810T124656Z (checkpoint, 4003s) :done, run_20260810T124656Z, 2026-08-10T12:46:56, 2026-08-10T13:53:39
     section Stage 1
     1.1 attempt 1 (verified, 439s) :done, b_1_1_attempt1, 2026-08-10T03:49:55, 2026-08-10T03:57:14
     section Stage 2
@@ -77,6 +81,9 @@ gantt
     section Stage 5
     5.1 attempt 1 (verified, 64s) :done, b_5_1_attempt1, 2026-08-10T13:02:11, 2026-08-10T13:03:15
     5.2 attempt 1 (verified, 396s) :done, b_5_2_attempt1, 2026-08-10T13:03:15, 2026-08-10T13:09:51
+    section Stage 6
+    6.1 attempt 1 (verified, 54s) :done, b_6_1_attempt1, 2026-08-10T13:45:11, 2026-08-10T13:46:05
+    6.2 attempt 1 (blocked, 454s) :crit, b_6_2_attempt1, 2026-08-10T13:46:05, 2026-08-10T13:53:39
 ```
 
 Run `run-20260810T034356Z` and task 3.5's first attempt were left open across a session pause
@@ -126,7 +133,9 @@ between roughly 04:29 and 12:46 UTC; both are recorded `interrupted` with unknow
 
 ## Integration Decision
 
-- Status: pending
+- Status: pending — Stages 1-5 and task 6.1 complete and committed to `feature/json-visualizer`;
+  task 6.2 blocked on the human GUI walkthrough (see task 6.2's notes above). Awaiting that
+  confirmation, then a `spec-finish` integration choice.
 - Base: `main`
-- Result: —
+- Result: not yet merged/PR'd — 7 commits ahead of `main` on `feature/json-visualizer`
 - Post-integration verification: pending

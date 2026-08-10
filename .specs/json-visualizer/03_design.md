@@ -197,12 +197,19 @@ have to live where that import never happens.
 
 ### Webview: `TableView.tsx`
 
-- `KeyValueTable({ node })` — for an object node, one row per key (**R5.1**).
+- `KeyValueTable({ node })` — for an object node, one row per key (**R5.1**); also the fallback
+  for a plain array of scalars (falls back to each element's index as the row label), a shape
+  R5.1-R5.3 don't name but that `TableView`'s routing sends here regardless.
 - `ArrayGrid({ node })` — for an array-of-objects node, one row per element, unioned column
   headers across elements (**R5.2**).
 - Both delegate any cell whose value is itself an object/array to a `PreviewBadge` showing
   `"{n}"`/`"[n]"` instead of expanding it inline (**R5.3**) — clicking a badge is out of scope for
   v1 (no drill-in from Table view; Column view already covers drill-down).
+- `TableView({ node })` — the mode-level entry point selecting between `ArrayGrid` (array of
+  objects), `KeyValueTable` (everything else with children), or rendering the value directly for
+  a scalar root (a document whose top-level value is a bare number/string/boolean/null; found
+  during task 6.2's fixture walkthrough — `KeyValueTable` would otherwise render a silently empty
+  table with no visible value at all).
 
 ## Data Models
 

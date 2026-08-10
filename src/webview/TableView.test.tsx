@@ -85,6 +85,15 @@ test("renders a nested object/array cell as a preview badge, never inline", () =
   cleanup();
 });
 
+test("renders the value directly for a scalar-root document, not an empty table", () => {
+  const node: JsonNode = { kind: "number", path: [], value: 42 };
+  const { container } = render(<TableView node={node} />);
+  assert.equal(container.querySelector(".table-view__kv"), null, "no empty table renders");
+  const scalarRoot = container.querySelector(".table-view__scalar-root");
+  assert.equal(scalarRoot?.textContent, "42");
+  cleanup();
+});
+
 test("falls back to a key-value table for a plain array of scalars", () => {
   const node: JsonNode = {
     kind: "array",

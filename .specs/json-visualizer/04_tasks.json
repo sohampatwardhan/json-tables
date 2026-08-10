@@ -3,11 +3,9 @@
     "active_stage": 6,
     "blocked": {},
     "parallel_candidates": [
-      "6.1",
       "6.2"
     ],
     "ready": [
-      "6.1",
       "6.2"
     ],
     "serial_candidates": [],
@@ -15,7 +13,6 @@
       {
         "mode": "parallel",
         "tasks": [
-          "6.1",
           "6.2"
         ],
         "wave": 1
@@ -24,7 +21,7 @@
   },
   "generated_from": {
     "file": "04_tasks.md",
-    "sha256": "c48247473b0958c82155c799d807e907de508c2cf8486013d6ac6fa17c33b45c"
+    "sha256": "260570fad998ea31dc82439a808ef15e1f4446e6c91979be9e3aff6239d18506"
   },
   "requirement_count": 35,
   "schema_version": 1,
@@ -257,7 +254,7 @@
       "stage": 3,
       "task_category": "code_analysis",
       "title": "Implement the Key-Value/Table View component",
-      "verification": "component test covering a plain object, an array of objects with heterogeneous keys (union headers), and a nested object/array cell rendering as a badge"
+      "verification": "component test covering a plain object, an array of objects with heterogeneous keys (union headers), a nested object/array cell rendering as a badge, a plain array of scalars, and (added post-fix) a scalar-root document \u2014 5 tests, all passing"
     },
     {
       "capability_tier": "economical",
@@ -418,7 +415,7 @@
     },
     {
       "capability_tier": "frontier",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -442,7 +439,7 @@
       "stage": 6,
       "task_category": "review",
       "title": "Verify the read-only guarantee across the whole codebase",
-      "verification": "the grep above returns no matches, and the manual element inspection confirms no editable element exists in any of the three view components"
+      "verification": "the grep above returns no matches (outside one confirming doc comment), and the manual element inspection confirms no editable element exists in any of the three view components \u2014 **PASS**"
     },
     {
       "capability_tier": "balanced",
@@ -472,7 +469,7 @@
       "stage": 6,
       "task_category": "review",
       "title": "Package the extension and run the end-to-end walkthrough",
-      "verification": "`npx vsce package` exits 0 without a publisher-account error; the installed `.vsix` shows the same editor-title button and panel behavior as the Extension Development Host across every fixture/theme combination above"
+      "verification": "`npx vsce package` exits 0 without a publisher-account error (confirmed); the installed `.vsix` shows the same editor-title button and panel behavior as the Extension Development Host across every fixture/theme combination above (pending human confirmation)"
     }
   ]
 }

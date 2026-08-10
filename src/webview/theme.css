@@ -151,6 +151,9 @@ button {
 .table-view__badge {
   color: var(--vscode-descriptionForeground);
 }
+.table-view__scalar-root {
+  padding: 8px;
+}
 
 /* Error banner (App root) */
 .app__error-banner {
