@@ -45,7 +45,8 @@
     "compile": "node esbuild.config.mjs",
     "watch": "node esbuild.config.mjs --watch",
     "test": "node --import tsx --test src/**/*.test.ts src/**/*.test.tsx",
-    "package": "npm run compile -- --production && vsce package"
+    "package": "npm run compile -- --production && vsce package",
+    "publish": "npm run compile -- --production && vsce publish"
   },
   "dependencies": {
     "jsonc-parser": "3.3.1",
