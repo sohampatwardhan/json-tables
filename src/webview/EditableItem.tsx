@@ -72,7 +72,6 @@ export function EditableKey({ path, currentKey, onRenameKey, className }: Editab
         e.stopPropagation();
         setIsEditing(true);
       }}
-      title="Double click to rename key"
     >
       {currentKey}
     </span>
@@ -142,7 +141,6 @@ export function EditableValue({ node, onEditValue, className }: EditableValuePro
         e.stopPropagation();
         setIsEditing(true);
       }}
-      title="Double click to edit value"
     >
       {formatScalarText(node)}
     </span>
