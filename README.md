@@ -1,41 +1,51 @@
 # JSON Tables
 
-Visualize any `.json`/`.jsonc` file as an interactive **Tree**, **Column**, or **Table** view,
-right beside the source editor — without ever editing the file.
+Visualize and edit any `.json` or `.jsonc` file with interactive **Tree**, **Column** (macOS Finder-style), or **Table** (Key-Value) views, right beside your VS Code editor.
+
+![JSON Tables Icon](media/icon.png)
+
+## Features
+
+- **Three Switchable View Modes**:
+  - **Tree View** — Hierarchical collapsible tree auto-expanded two levels deep, with child count badges, type syntax coloring, and Expand/Collapse All controls.
+  - **Column View** — macOS Finder-style multi-column drill-down with independent resizable columns, child count badges (`438 ›`), inline scalar previews, active blue row selection, and a right-side inspector pane.
+  - **Table View** — Key-Value flex layout with distinctive grey key headers, nested collapsible tables, and auto-unioned grid headers for arrays of objects.
+- **Interactive Inline Editing & Key Renaming**:
+  - Double-click any key or value to edit in place.
+  - Automatic type parsing (`boolean`, `number`, `null`, `string`).
+  - Native VS Code `WorkspaceEdit` integration with full **Undo/Redo** (`Cmd+Z` / `Ctrl+Z`) support.
+- **Dynamic Responsive Layout**:
+  - Automatically scales and wraps content to fit side-by-side split editors or resized windows.
+- **Theme-Aware**:
+  - Fully adaptive to Light, Dark, High Contrast, and custom VS Code color themes.
+- **Native Editor Integration**:
+  - Click the **`$(table)`** button in the editor title bar or run **JSON Tables: Visualize JSON** from the Command Palette.
 
 ## Usage
 
-Open a `.json` or `.jsonc` file, then click the **Visualize JSON** icon in the editor's title
-bar (or run **JSON Tables: Visualize JSON** from the Command Palette). A panel opens beside your
-file with three switchable views:
-
-- **Tree** — a collapsible tree, auto-expanded two levels deep, with expand-all/collapse-all
-  controls and type-colored leaf values.
-- **Column** — a Finder-style drill-down: select an object or array to open a new column to its
-  right; select a scalar to preview it in the detail pane.
-- **Table** — plain objects render as key/value rows; arrays of objects render as a grid with
-  columns unioned across every element's keys.
-
-The panel is **read-only** — nothing you do in it ever changes your file — and stays in sync as
-you edit the source. It matches your active VS Code color theme automatically.
-
-## Status
-
-This is a personal project, not yet published to the VS Code Marketplace. Install it locally
-from a built `.vsix` (see below) or run it from source via the Extension Development Host
-(press `F5` in this repository).
+1. Open any `.json` or `.jsonc` file in VS Code.
+2. Click the **`$(table)`** icon in the editor tab bar (top right) or press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> $\rightarrow$ **JSON Tables: Visualize JSON**.
+3. Switch between **Tree**, **Column**, and **Table** modes using the top toolbar.
+4. Double-click any key to rename it, or double-click any value to edit it.
 
 ## Building from source
 
 ```bash
 npm install
 npm run compile   # builds dist/extension.js and dist/webview/main.js
-npm test          # runs the unit/component test suite
-npx vsce package  # produces json-tables-<version>.vsix
+npm test          # runs the 44-test unit/component suite
+npx vsce package  # builds json-tables-<version>.vsix
 ```
 
-Install the resulting `.vsix` in VS Code via **Extensions: Install from VSIX...**.
+Install the resulting `.vsix` into VS Code via:
+```bash
+code --install-extension json-tables-0.1.0.vsix --force
+```
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for full release history and notes.
 
 ## License
 
-MIT — see the `LICENSE` file in this repository.
+[MIT](LICENSE)
