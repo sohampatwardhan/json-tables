@@ -34,12 +34,12 @@ Visualize and edit any `.json` or `.jsonc` file with interactive **Tree**, **Col
 npm install
 npm run compile   # builds dist/extension.js and dist/webview/main.js
 npm test          # runs the 44-test unit/component suite
-npx vsce package  # builds json-explorer-vscode-<version>.vsix
+npx vsce package  # builds json-explorer-viewer-<version>.vsix
 ```
 
 Install the resulting `.vsix` into VS Code via:
 ```bash
-code --install-extension json-explorer-vscode-0.2.0.vsix --force
+code --install-extension json-explorer-viewer-0.2.0.vsix --force
 ```
 
 ## Changelog
