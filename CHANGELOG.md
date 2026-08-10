@@ -5,6 +5,12 @@ All notable changes to the **JSON Tables** extension will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.9] - 2026-08-10
+
+### Changed
+- **Compact Index & Key Columns**: Tightened key columns and array index cells (`0`, `1`, `2`, ...) to shrink-wrap exact content width (`width: 1%; min-width: 24px`) without wasting space on large empty gaps.
+- **No Unnecessary Scrollbars on Simple Tables**: Improved word and hash wrapping (`word-break: break-word`) in monospace values so long strings (like sha256 hashes) wrap cleanly and avoid triggering premature horizontal scrollbars.
+
 ## [0.1.8] - 2026-08-10
 
 ### Fixed
