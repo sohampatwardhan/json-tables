@@ -1,5 +1,5 @@
 import { useState } from "preact/hooks";
-import type { JsonNode } from "../shared/types";
+import type { JsonNode } from "../shared/types.ts";
 
 const DEFAULT_COLUMN_WIDTH = 200;
 const MIN_COLUMN_WIDTH = 80;
@@ -19,6 +19,11 @@ function findNodeAtPath(root: JsonNode, path: string[]): JsonNode | undefined {
 
 function entryLabel(node: JsonNode, index: number): string {
   return node.key ?? String(node.index ?? index);
+}
+
+function formatScalarPreview(node: JsonNode): string {
+  if (node.kind === "string") return `"${String(node.value)}"`;
+  return String(node.value);
 }
 
 interface ColumnProps {
@@ -53,6 +58,7 @@ function Column({ node, columnIndex, selectedKey, onSelectEntry }: ColumnProps) 
         {(node.children ?? []).map((entry, index) => {
           const label = entryLabel(entry, index);
           const isContainer = entry.kind === "object" || entry.kind === "array";
+          const count = entry.children?.length ?? 0;
           return (
             <li key={label}>
               <button
@@ -61,8 +67,23 @@ function Column({ node, columnIndex, selectedKey, onSelectEntry }: ColumnProps) 
                 aria-selected={selectedKey === label}
                 onClick={() => onSelectEntry(columnIndex, entry)}
               >
-                <span class="column-view__entry-label">{label}</span>
-                {isContainer && <span class="column-view__entry-arrow">{"›"}</span>}
+                <span class="column-view__entry-label" title={label}>
+                  {label}
+                </span>
+                {isContainer ? (
+                  <span class="column-view__entry-meta">
+                    <span class="column-view__entry-count">{count}</span>
+                    <span class="column-view__entry-arrow">{"›"}</span>
+                  </span>
+                ) : (
+                  <span
+                    class="column-view__entry-value"
+                    data-kind={entry.kind}
+                    title={formatScalarPreview(entry)}
+                  >
+                    {formatScalarPreview(entry)}
+                  </span>
+                )}
               </button>
             </li>
           );
@@ -84,24 +105,33 @@ interface ColumnViewProps {
 
 /**
  * A macOS Finder-style drill-down: one column per already-selected path segment, plus a detail
- * pane for the currently selected scalar (if any). Selecting an object/array entry always
- * extends `selectedPath` by exactly one segment; selecting a scalar entry never does — the two
- * are mutually exclusive so a scalar selection can never be mistaken for a drill-down.
+ * pane for the currently selected scalar (if any). Selecting any entry highlights it in blue.
+ * Selecting a container appends a new column for its children, while selecting a scalar displays
+ * its value in the detail pane column.
  */
 export function ColumnView({ root, selectedPath, onSelectPath }: ColumnViewProps) {
-  const [detailValue, setDetailValue] = useState<JsonNode | undefined>(undefined);
+  const [detailValue, setDetailValue] = useState<JsonNode | undefined>(() => {
+    if (selectedPath.length === 0) return undefined;
+    const lastNode = findNodeAtPath(root, selectedPath);
+    return lastNode && lastNode.kind !== "object" && lastNode.kind !== "array" ? lastNode : undefined;
+  });
 
   const columnNodes: JsonNode[] = [root];
   for (let i = 0; i < selectedPath.length; i++) {
     const next = findNodeAtPath(root, selectedPath.slice(0, i + 1));
     if (next === undefined) break;
-    columnNodes.push(next);
+    if (next.kind === "object" || next.kind === "array") {
+      columnNodes.push(next);
+    }
   }
 
   function handleSelectEntry(columnIndex: number, entry: JsonNode) {
+    const segment = entry.key ?? String(entry.index);
+    const nextPath = [...selectedPath.slice(0, columnIndex), segment];
+    onSelectPath(nextPath);
+
     if (entry.kind === "object" || entry.kind === "array") {
       setDetailValue(undefined);
-      onSelectPath([...selectedPath.slice(0, columnIndex), entry.key ?? String(entry.index)]);
     } else {
       setDetailValue(entry);
     }
@@ -120,11 +150,25 @@ export function ColumnView({ root, selectedPath, onSelectPath }: ColumnViewProps
       ))}
       <div class="column-view__detail-pane">
         {detailValue ? (
-          <span class="column-view__detail-value" data-kind={detailValue.kind}>
-            {detailValue.kind === "string" ? `"${String(detailValue.value)}"` : String(detailValue.value)}
-          </span>
+          <div class="column-view__detail-card">
+            <div class="column-view__detail-header">
+              <span class="column-view__detail-key">
+                {detailValue.key ?? String(detailValue.index ?? "")}
+              </span>
+              <span class="column-view__detail-badge" data-kind={detailValue.kind}>
+                {detailValue.kind}
+              </span>
+            </div>
+            <div class="column-view__detail-body">
+              <pre class="column-view__detail-value" data-kind={detailValue.kind}>
+                {detailValue.kind === "string"
+                  ? `"${String(detailValue.value)}"`
+                  : String(detailValue.value)}
+              </pre>
+            </div>
+          </div>
         ) : (
-          <span class="column-view__detail-empty">Select a value to preview it here.</span>
+          <div class="column-view__detail-empty">Select a value to preview it here.</div>
         )}
       </div>
     </div>

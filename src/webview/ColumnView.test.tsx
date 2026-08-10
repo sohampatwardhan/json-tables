@@ -27,10 +27,24 @@ const sampleTree: JsonNode = {
   ],
 };
 
-function Harness() {
-  return null;
-}
-void Harness;
+test("renders container entries with child count next to arrow, and scalar entries with inline values", () => {
+  const { container } = render(
+    <ColumnView root={sampleTree} selectedPath={[]} onSelectPath={() => {}} />,
+  );
+  const userEntry = Array.from(container.querySelectorAll(".column-view__entry")).find((el) =>
+    el.textContent?.includes("user"),
+  );
+  assert.ok(userEntry);
+  assert.equal(userEntry.querySelector(".column-view__entry-count")?.textContent, "2");
+  assert.equal(userEntry.querySelector(".column-view__entry-arrow")?.textContent, "›");
+
+  const countEntry = Array.from(container.querySelectorAll(".column-view__entry")).find((el) =>
+    el.textContent?.includes("count"),
+  );
+  assert.ok(countEntry);
+  assert.equal(countEntry.querySelector(".column-view__entry-value")?.textContent, "3");
+  cleanup();
+});
 
 test("selecting an object entry appends exactly one column", () => {
   let selectedPath: string[] = [];
@@ -53,11 +67,10 @@ test("selecting an object entry appends exactly one column", () => {
   cleanup();
 });
 
-test("selecting a scalar entry never appends a column, and shows it in the detail pane", () => {
-  const { container } = render(
-    <ColumnView root={sampleTree} selectedPath={[]} onSelectPath={() => {
-      throw new Error("onSelectPath must not be called for a scalar entry");
-    }} />,
+test("selecting a scalar entry highlights the key in blue and shows it in the detail pane without adding extra columns", () => {
+  let selectedPath: string[] = [];
+  const { container, rerender } = render(
+    <ColumnView root={sampleTree} selectedPath={selectedPath} onSelectPath={(p) => (selectedPath = p)} />,
   );
   const columnsBefore = container.querySelectorAll(".column-view__column").length;
 
@@ -66,9 +79,15 @@ test("selecting a scalar entry never appends a column, and shows it in the detai
   );
   assert.ok(countButton);
   fireEvent.click(countButton as Element);
+  assert.deepEqual(selectedPath, ["count"]);
 
+  rerender(<ColumnView root={sampleTree} selectedPath={selectedPath} onSelectPath={(p) => (selectedPath = p)} />);
   const columnsAfter = container.querySelectorAll(".column-view__column").length;
   assert.equal(columnsAfter, columnsBefore, "scalar selection must never add a column");
+
+  const selectedEntry = container.querySelector('.column-view__entry[aria-selected="true"]');
+  assert.ok(selectedEntry?.textContent?.includes("count"), "scalar entry is selected and highlighted in blue");
+
   const detail = container.querySelector(".column-view__detail-value");
   assert.equal(detail?.textContent, "3");
   cleanup();
