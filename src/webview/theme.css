@@ -252,49 +252,64 @@ button {
   color: var(--vscode-descriptionForeground);
 }
 
-/* Table view & Nested tables */
+/* Table View — Key-Value Layout */
 .table-view-container {
-  padding: 12px;
   overflow: auto;
   flex: 1;
   min-height: 0;
   width: 100%;
+  height: 100%;
   box-sizing: border-box;
-}
-
-.table-view__kv,
-.table-view__grid {
-  border-collapse: collapse;
-  width: 100%;
-  border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.35)));
   background: var(--vscode-editor-background);
 }
 
-.table-view__kv th,
-.table-view__kv td,
-.table-view__grid th,
-.table-view__grid td {
-  border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.35)));
-  padding: 6px 10px;
-  text-align: left;
-  vertical-align: top;
-  line-height: 1.4;
+.kv-container {
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.table-view__kv th,
-.table-view__grid th {
-  background: var(--vscode-keybindingTable-headerBackground, var(--vscode-sideBar-background, rgba(128, 128, 128, 0.1)));
-  color: var(--vscode-foreground);
-  font-weight: 600;
-  white-space: nowrap;
+.kv-row {
+  display: flex;
+  border-bottom: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
+  width: 100%;
+  min-height: 32px;
 }
 
-.table-view__kv th {
-  width: 1%;
-  white-space: nowrap;
+.kv-key {
+  width: 140px;
+  min-width: 140px;
+  max-width: 220px;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  background: var(--vscode-sideBarSectionHeader-background, rgba(59, 130, 246, 0.07));
+  color: var(--vscode-descriptionForeground);
+  font-weight: 500;
+  font-size: var(--vscode-font-size, 13px);
+  border-right: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
+  display: flex;
+  align-items: flex-start;
+  word-break: break-word;
 }
 
-/* Nested table styling */
+.kv-value {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  overflow-x: auto;
+}
+
+.val-mono {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: var(--vscode-editor-font-size, 12px);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Nested tables */
 .table-view__nested {
   margin: 0;
   width: 100%;
@@ -335,17 +350,57 @@ button {
   font-size: 11px;
 }
 
-.table-view__nested > .table-view__kv,
-.table-view__nested > .table-view__grid {
-  margin: 2px 0 4px 0;
-  border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
-  font-size: 0.95em;
+.table-view__nested-table {
+  border-collapse: collapse;
+  font-size: 12px;
+  width: auto;
+  min-width: 240px;
+  max-width: 100%;
+  margin-top: 2px;
+  border: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.25));
+  background: var(--vscode-editor-background);
 }
 
-.table-view__nested .table-view__kv th,
-.table-view__nested .table-view__grid th {
-  background: var(--vscode-sideBarSectionHeader-background, rgba(128, 128, 128, 0.15));
+.nested-key {
+  padding: 4px 8px;
+  border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
   font-weight: 500;
+  white-space: nowrap;
+  vertical-align: top;
+  background: var(--vscode-sideBarSectionHeader-background, rgba(59, 130, 246, 0.08));
+  color: var(--vscode-descriptionForeground);
+  width: 1%;
+}
+
+.nested-value {
+  padding: 4px 8px;
+  border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
+  vertical-align: top;
+  background: rgba(245, 158, 11, 0.02);
+}
+
+/* Array Grid (Table mode for arrays of objects) */
+.table-view__grid {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+  border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
+}
+
+.table-view__grid th {
+  padding: 6px 10px;
+  border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
+  background: var(--vscode-sideBarSectionHeader-background, rgba(59, 130, 246, 0.08));
+  color: var(--vscode-foreground);
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table-view__grid td {
+  padding: 4px 8px;
+  border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, rgba(128, 128, 128, 0.25)));
+  vertical-align: top;
 }
 
 .table-view__empty {

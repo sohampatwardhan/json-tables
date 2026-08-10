@@ -15,10 +15,10 @@ test("renders a plain object as one row per key", () => {
     ],
   };
   const { container } = render(<TableView node={node} />);
-  const rows = container.querySelectorAll(".table-view__kv tbody tr");
+  const rows = container.querySelectorAll(".kv-row");
   assert.equal(rows.length, 2);
-  assert.equal(rows[0].querySelector("th")?.textContent, "name");
-  assert.equal(rows[1].querySelector("th")?.textContent, "age");
+  assert.equal(rows[0].querySelector(".kv-key")?.textContent, "name");
+  assert.equal(rows[1].querySelector(".kv-key")?.textContent, "age");
   cleanup();
 });
 
@@ -103,8 +103,8 @@ test("falls back to a key-value table for a plain array of scalars", () => {
     ],
   };
   const { container } = render(<TableView node={node} />);
-  const rows = container.querySelectorAll(".table-view__kv tbody tr");
+  const rows = container.querySelectorAll(".kv-row");
   assert.equal(rows.length, 2);
-  assert.equal(rows[0].querySelector("th")?.textContent, "0");
+  assert.equal(rows[0].querySelector(".kv-key")?.textContent, "0");
   cleanup();
 });

@@ -52,7 +52,7 @@ test("an update message replaces the view model without changing the current vie
   });
 
   assert.ok(container.querySelector(".table-view__kv"), "still in table mode after an update message");
-  const rows = container.querySelectorAll(".table-view__kv tbody tr");
+  const rows = container.querySelectorAll(".table-view__kv .kv-row");
   assert.equal(rows.length, 0, "the updated (now-empty) view model is what's rendered");
   cleanup();
 });
