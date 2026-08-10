@@ -14,7 +14,7 @@
         "projects": [
           {
             "id": "proj-1",
-            "title": "JSON Tables Extension",
+            "title": "JSON Explorer Extension",
             "milestones": [
               { "phase": 1, "done": true },
               { "phase": 2, "done": false }

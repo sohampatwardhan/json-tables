@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the **JSON Tables** extension will be documented in this file.
+All notable changes to the **JSON Explorer** extension will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -58,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Active Tab Opening**: Clicking the `$(table)` editor title button now opens the JSON visualizer directly in a new tab within the active editor group rather than splitting into a side pane.
-- **Dynamic Tab Header & Icon**: Sets tab title to `JSON: <filename>` and shows the JSON Tables icon on the tab header.
+- **Dynamic Tab Header & Icon**: Sets tab title to `JSON: <filename>` and shows the JSON Explorer icon on the tab header.
 
 ## [0.1.0] - 2026-08-10
 

@@ -1,8 +1,8 @@
-# JSON Tables
+# JSON Explorer
 
 Visualize and edit any `.json` or `.jsonc` file with interactive **Tree**, **Column** (macOS Finder-style), or **Table** (Key-Value) views, right beside your VS Code editor.
 
-![JSON Tables Icon](media/icon.png)
+![JSON Explorer Icon](media/icon.png)
 
 ## Features
 
@@ -19,12 +19,12 @@ Visualize and edit any `.json` or `.jsonc` file with interactive **Tree**, **Col
 - **Theme-Aware**:
   - Fully adaptive to Light, Dark, High Contrast, and custom VS Code color themes.
 - **Native Editor Integration**:
-  - Click the **`$(json)`** (`{ }`) button in the editor title bar or run **JSON Tables: Visualize JSON** from the Command Palette.
+  - Click the **`$(json)`** (`{ }`) button in the editor title bar or run **JSON Explorer: Visualize JSON** from the Command Palette.
 
 ## Usage
 
 1. Open any `.json` or `.jsonc` file in VS Code.
-2. Click the **`$(json)`** (`{ }`) icon in the editor tab bar (top right) or press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> $\rightarrow$ **JSON Tables: Visualize JSON**.
+2. Click the **`$(json)`** (`{ }`) icon in the editor tab bar (top right) or press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> $\rightarrow$ **JSON Explorer: Visualize JSON**.
 3. Switch between **Tree**, **Column**, and **Table** modes using the top toolbar.
 4. Double-click any key to rename it, or double-click any value to edit it.
 

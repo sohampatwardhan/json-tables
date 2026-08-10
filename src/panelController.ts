@@ -7,7 +7,7 @@ import { generateNonce, renderWebviewHtml } from "./webviewHtml.ts";
 import { editDocumentValue, renameDocumentKey } from "./documentEditor.ts";
 import type { HostMessage, ViewMode, WebviewMessage } from "./shared/types.ts";
 
-const LAST_VIEW_MODE_KEY = "jsonTables.lastViewMode";
+const LAST_VIEW_MODE_KEY = "jsonExplorer.lastViewMode";
 const DEBOUNCE_MS = 150;
 
 /**
@@ -48,9 +48,9 @@ export class PanelController {
       return;
     }
 
-    const fileName = document.fileName ? path.basename(document.fileName) : "JSON Tables";
+    const fileName = document.fileName ? path.basename(document.fileName) : "JSON Explorer";
     const panel = vscode.window.createWebviewPanel(
-      "jsonTables.visualizer",
+      "jsonExplorer.visualizer",
       `JSON: ${fileName}`,
       vscode.ViewColumn.Active,
       {

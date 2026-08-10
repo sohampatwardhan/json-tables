@@ -29,7 +29,7 @@ export function renderWebviewHtml(options: {
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" nonce="${nonce}" href="${styleUri}">
-  <title>JSON Tables</title>
+  <title>JSON Explorer</title>
 </head>
 <body>
   <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
