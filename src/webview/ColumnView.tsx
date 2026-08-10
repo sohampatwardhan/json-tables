@@ -1,5 +1,6 @@
 import { useState } from "preact/hooks";
 import type { JsonNode } from "../shared/types.ts";
+import { EditableKey, EditableValue, formatScalarText } from "./EditableItem.tsx";
 
 const DEFAULT_COLUMN_WIDTH = 200;
 const MIN_COLUMN_WIDTH = 80;
@@ -21,20 +22,24 @@ function entryLabel(node: JsonNode, index: number): string {
   return node.key ?? String(node.index ?? index);
 }
 
-function formatScalarPreview(node: JsonNode): string {
-  if (node.kind === "string") return `"${String(node.value)}"`;
-  return String(node.value);
-}
-
 interface ColumnProps {
   node: JsonNode;
   columnIndex: number;
   selectedKey: string | undefined;
   onSelectEntry: (columnIndex: number, entry: JsonNode) => void;
+  onEditValue?: (path: string[], value: any) => void;
+  onRenameKey?: (path: string[], newKey: string) => void;
 }
 
 /** One column: the entries of `node`, with its own independently resizable width. */
-function Column({ node, columnIndex, selectedKey, onSelectEntry }: ColumnProps) {
+function Column({
+  node,
+  columnIndex,
+  selectedKey,
+  onSelectEntry,
+  onEditValue,
+  onRenameKey,
+}: ColumnProps) {
   const [width, setWidth] = useState(DEFAULT_COLUMN_WIDTH);
 
   function startResize(event: PointerEvent) {
@@ -68,7 +73,11 @@ function Column({ node, columnIndex, selectedKey, onSelectEntry }: ColumnProps) 
                 onClick={() => onSelectEntry(columnIndex, entry)}
               >
                 <span class="column-view__entry-label" title={label}>
-                  {label}
+                  {entry.key !== undefined && onRenameKey ? (
+                    <EditableKey path={entry.path} currentKey={label} onRenameKey={onRenameKey} />
+                  ) : (
+                    label
+                  )}
                 </span>
                 {isContainer ? (
                   <span class="column-view__entry-meta">
@@ -76,12 +85,12 @@ function Column({ node, columnIndex, selectedKey, onSelectEntry }: ColumnProps) 
                     <span class="column-view__entry-arrow">{"›"}</span>
                   </span>
                 ) : (
-                  <span
-                    class="column-view__entry-value"
-                    data-kind={entry.kind}
-                    title={formatScalarPreview(entry)}
-                  >
-                    {formatScalarPreview(entry)}
+                  <span class="column-view__entry-value" data-kind={entry.kind}>
+                    {onEditValue ? (
+                      <EditableValue node={entry} onEditValue={onEditValue} />
+                    ) : (
+                      formatScalarText(entry)
+                    )}
                   </span>
                 )}
               </button>
@@ -101,15 +110,23 @@ interface ColumnViewProps {
   root: JsonNode;
   selectedPath: string[];
   onSelectPath: (path: string[]) => void;
+  onEditValue?: (path: string[], value: any) => void;
+  onRenameKey?: (path: string[], newKey: string) => void;
 }
 
 /**
  * A macOS Finder-style drill-down: one column per already-selected path segment, plus a detail
  * pane for the currently selected scalar (if any). Selecting any entry highlights it in blue.
  * Selecting a container appends a new column for its children, while selecting a scalar displays
- * its value in the detail pane column.
+ * its value in the detail pane column. Allows double-click inline editing of keys and values.
  */
-export function ColumnView({ root, selectedPath, onSelectPath }: ColumnViewProps) {
+export function ColumnView({
+  root,
+  selectedPath,
+  onSelectPath,
+  onEditValue,
+  onRenameKey,
+}: ColumnViewProps) {
   const [detailValue, setDetailValue] = useState<JsonNode | undefined>(() => {
     if (selectedPath.length === 0) return undefined;
     const lastNode = findNodeAtPath(root, selectedPath);
@@ -146,6 +163,8 @@ export function ColumnView({ root, selectedPath, onSelectPath }: ColumnViewProps
           columnIndex={index}
           selectedKey={selectedPath[index]}
           onSelectEntry={handleSelectEntry}
+          onEditValue={onEditValue}
+          onRenameKey={onRenameKey}
         />
       ))}
       <div class="column-view__detail-pane">
@@ -153,18 +172,32 @@ export function ColumnView({ root, selectedPath, onSelectPath }: ColumnViewProps
           <div class="column-view__detail-card">
             <div class="column-view__detail-header">
               <span class="column-view__detail-key">
-                {detailValue.key ?? String(detailValue.index ?? "")}
+                {detailValue.key !== undefined && onRenameKey ? (
+                  <EditableKey
+                    path={detailValue.path}
+                    currentKey={detailValue.key}
+                    onRenameKey={onRenameKey}
+                  />
+                ) : (
+                  detailValue.key ?? String(detailValue.index ?? "")
+                )}
               </span>
               <span class="column-view__detail-badge" data-kind={detailValue.kind}>
                 {detailValue.kind}
               </span>
             </div>
             <div class="column-view__detail-body">
-              <pre class="column-view__detail-value" data-kind={detailValue.kind}>
-                {detailValue.kind === "string"
-                  ? `"${String(detailValue.value)}"`
-                  : String(detailValue.value)}
-              </pre>
+              {onEditValue ? (
+                <EditableValue
+                  node={detailValue}
+                  onEditValue={onEditValue}
+                  className="column-view__detail-value"
+                />
+              ) : (
+                <pre class="column-view__detail-value" data-kind={detailValue.kind}>
+                  {formatScalarText(detailValue)}
+                </pre>
+              )}
             </div>
           </div>
         ) : (

@@ -92,3 +92,50 @@ test("expand-all and collapse-all mutate the full expandedPaths set", () => {
   assert.equal(container.querySelectorAll(".tree-node__children").length, 2, "everything expanded");
   cleanup();
 });
+
+test("editing a value emits an editValue message to postMessage", () => {
+  const postMessage = mock.fn();
+  const { container } = render(<App postMessage={postMessage} />);
+  sendHostMessage({ type: "init", viewMode: "tree", viewModel: { status: "ok", root: sampleTree } });
+
+  const val = container.querySelector(".tree-node--leaf .val-editable");
+  assert.ok(val);
+  fireEvent.dblClick(val);
+
+  const input = container.querySelector("input");
+  assert.ok(input);
+  fireEvent.input(input, { target: { value: "new-val" } });
+  fireEvent.keyDown(input, { key: "Enter" });
+
+  assert.equal(postMessage.mock.callCount(), 1);
+  assert.deepEqual(postMessage.mock.calls[0].arguments[0], {
+    type: "editValue",
+    path: ["a"],
+    value: "new-val",
+  });
+  cleanup();
+});
+
+test("renaming a key emits a renameKey message to postMessage", () => {
+  const postMessage = mock.fn();
+  const { container } = render(<App postMessage={postMessage} />);
+  sendHostMessage({ type: "init", viewMode: "tree", viewModel: { status: "ok", root: sampleTree } });
+
+  const keySpan = container.querySelector(".tree-node--leaf .key-editable");
+  assert.ok(keySpan);
+  fireEvent.dblClick(keySpan);
+
+  const input = container.querySelector("input");
+  assert.ok(input);
+  fireEvent.input(input, { target: { value: "renamedKey" } });
+  fireEvent.keyDown(input, { key: "Enter" });
+
+  assert.equal(postMessage.mock.callCount(), 1);
+  assert.deepEqual(postMessage.mock.calls[0].arguments[0], {
+    type: "renameKey",
+    path: ["a"],
+    newKey: "renamedKey",
+  });
+  cleanup();
+});
+

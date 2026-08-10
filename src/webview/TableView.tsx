@@ -1,13 +1,20 @@
 import { useState } from "preact/hooks";
 import type { JsonNode } from "../shared/types.ts";
+import { EditableKey, EditableValue } from "./EditableItem.tsx";
 
-function scalarText(node: JsonNode): string {
-  if (node.kind === "string") return `"${String(node.value)}"`;
-  return String(node.value);
+interface EditProps {
+  onEditValue?: (path: string[], value: any) => void;
+  onRenameKey?: (path: string[], newKey: string) => void;
 }
 
 /** Renders any node's value as a cell: an expandable nested table for objects/arrays, scalar text otherwise. */
-function Cell({ node }: { node: JsonNode }) {
+function Cell({
+  node,
+  onEditValue,
+  onRenameKey,
+}: {
+  node: JsonNode;
+} & EditProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   if (node.kind === "object" || node.kind === "array") {
@@ -35,22 +42,39 @@ function Cell({ node }: { node: JsonNode }) {
             {node.kind === "array" ? `[${count}]` : `{${count}}`}
           </span>
         </button>
-        {!isCollapsed && <NestedTable node={node} />}
+        {!isCollapsed && (
+          <NestedTable node={node} onEditValue={onEditValue} onRenameKey={onRenameKey} />
+        )}
       </div>
     );
   }
-  return <span class="val-mono" data-kind={node.kind}>{scalarText(node)}</span>;
+
+  if (onEditValue) {
+    return <EditableValue node={node} onEditValue={onEditValue} />;
+  }
+
+  return (
+    <span class="val-mono" data-kind={node.kind}>
+      {node.kind === "string" ? `"${String(node.value)}"` : String(node.value)}
+    </span>
+  );
 }
 
 /** Renders a nested table for nested objects/arrays inside a key-value value cell or grid cell. */
-export function NestedTable({ node }: { node: JsonNode }) {
+export function NestedTable({
+  node,
+  onEditValue,
+  onRenameKey,
+}: {
+  node: JsonNode;
+} & EditProps) {
   const isArrayOfObjects =
     node.kind === "array" &&
     (node.children?.length ?? 0) > 0 &&
     (node.children ?? []).every((child) => child.kind === "object");
 
   if (isArrayOfObjects) {
-    return <ArrayGrid node={node} isNested={true} />;
+    return <ArrayGrid node={node} isNested={true} onEditValue={onEditValue} onRenameKey={onRenameKey} />;
   }
 
   return (
@@ -60,9 +84,15 @@ export function NestedTable({ node }: { node: JsonNode }) {
           const rowLabel = child.key ?? String(child.index ?? index);
           return (
             <tr key={rowLabel}>
-              <td class="nested-key">{rowLabel}</td>
+              <td class="nested-key">
+                {child.key !== undefined && onRenameKey ? (
+                  <EditableKey path={child.path} currentKey={child.key} onRenameKey={onRenameKey} />
+                ) : (
+                  rowLabel
+                )}
+              </td>
               <td class="nested-value">
-                <Cell node={child} />
+                <Cell node={child} onEditValue={onEditValue} onRenameKey={onRenameKey} />
               </td>
             </tr>
           );
@@ -76,16 +106,28 @@ export function NestedTable({ node }: { node: JsonNode }) {
  * Renders top-level key-value rows: a fixed-width key column with a subtle blue tint
  * and border-right, paired with a flex-1 value column containing monospace values or nested tables.
  */
-export function KeyValueView({ node }: { node: JsonNode }) {
+export function KeyValueView({
+  node,
+  onEditValue,
+  onRenameKey,
+}: {
+  node: JsonNode;
+} & EditProps) {
   return (
     <div class="table-view__kv kv-container">
       {(node.children ?? []).map((child, index) => {
         const rowLabel = child.key ?? String(child.index ?? index);
         return (
           <div key={rowLabel} class="kv-row">
-            <div class="kv-key">{rowLabel}</div>
+            <div class="kv-key">
+              {child.key !== undefined && onRenameKey ? (
+                <EditableKey path={child.path} currentKey={child.key} onRenameKey={onRenameKey} />
+              ) : (
+                rowLabel
+              )}
+            </div>
             <div class="kv-value">
-              <Cell node={child} />
+              <Cell node={child} onEditValue={onEditValue} onRenameKey={onRenameKey} />
             </div>
           </div>
         );
@@ -99,7 +141,15 @@ export function KeyValueView({ node }: { node: JsonNode }) {
  * every element's keys (so an element missing a key just shows an empty cell rather than
  * shifting other columns).
  */
-export function ArrayGrid({ node, isNested }: { node: JsonNode; isNested?: boolean }) {
+export function ArrayGrid({
+  node,
+  isNested,
+  onEditValue,
+  onRenameKey,
+}: {
+  node: JsonNode;
+  isNested?: boolean;
+} & EditProps) {
   const elements = node.children ?? [];
   const headers: string[] = [];
   const seen = new Set<string>();
@@ -128,7 +178,13 @@ export function ArrayGrid({ node, isNested }: { node: JsonNode; isNested?: boole
           <tr key={element.index ?? index}>
             {headers.map((header) => {
               const field = element.children?.find((child) => child.key === header);
-              return <td key={header}>{field ? <Cell node={field} /> : null}</td>;
+              return (
+                <td key={header}>
+                  {field ? (
+                    <Cell node={field} onEditValue={onEditValue} onRenameKey={onRenameKey} />
+                  ) : null}
+                </td>
+              );
             })}
           </tr>
         ))}
@@ -141,11 +197,17 @@ export function ArrayGrid({ node, isNested }: { node: JsonNode; isNested?: boole
  * Chooses `ArrayGrid` for an array of objects, `KeyValueView` for anything else with children
  * (a plain object or array of scalars), or the value itself for a scalar root.
  */
-export function TableView({ node }: { node: JsonNode }) {
+export function TableView({
+  node,
+  onEditValue,
+  onRenameKey,
+}: {
+  node: JsonNode;
+} & EditProps) {
   if (node.kind !== "object" && node.kind !== "array") {
     return (
       <div class="table-view__scalar-root">
-        <Cell node={node} />
+        <Cell node={node} onEditValue={onEditValue} onRenameKey={onRenameKey} />
       </div>
     );
   }
@@ -154,7 +216,7 @@ export function TableView({ node }: { node: JsonNode }) {
     (node.children?.length ?? 0) > 0 &&
     (node.children ?? []).every((child) => child.kind === "object");
   if (isArrayOfObjects) {
-    return <ArrayGrid node={node} />;
+    return <ArrayGrid node={node} onEditValue={onEditValue} onRenameKey={onRenameKey} />;
   }
-  return <KeyValueView node={node} />;
+  return <KeyValueView node={node} onEditValue={onEditValue} onRenameKey={onRenameKey} />;
 }

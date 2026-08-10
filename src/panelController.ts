@@ -3,15 +3,16 @@ import { buildViewModel } from "./viewModelBuilder.ts";
 import { watchDocument } from "./documentWatcher.ts";
 import { debounce } from "./debounce.ts";
 import { generateNonce, renderWebviewHtml } from "./webviewHtml.ts";
+import { editDocumentValue, renameDocumentKey } from "./documentEditor.ts";
 import type { HostMessage, ViewMode, WebviewMessage } from "./shared/types.ts";
 
 const LAST_VIEW_MODE_KEY = "jsonTables.lastViewMode";
 const DEBOUNCE_MS = 150;
 
 /**
- * Owns one Webview panel per visualized document. Never writes to the document — no method
- * here calls `workspace.applyEdit`/`TextEditor.edit`, and the only messages this class sends are
- * `init`/`update` (data), never anything the webview could mistake for an edit request.
+ * Owns one Webview panel per visualized document. Applies document edits requested from the
+ * webview (value editing & key renaming) via VS Code WorkspaceEdit so that Undo/Redo is
+ * fully preserved in the active editor.
  */
 export class PanelController {
   private static readonly instances = new Map<string, PanelController>();
@@ -72,11 +73,6 @@ export class PanelController {
 
     const controller = new PanelController(context, document, panel);
     PanelController.instances.set(key, controller);
-    // sendInit() is deliberately NOT called here: the webview's script has not loaded yet
-    // (assigning `panel.webview.html` triggers an async page load), so a message posted this
-    // early could arrive before `main.tsx` has attached its listener. Waiting for the webview's
-    // own `ready` message (below) makes the handshake deterministic instead of relying on
-    // message-delivery timing.
   }
 
   private sendInit(): void {
@@ -90,11 +86,15 @@ export class PanelController {
     this.postMessage({ type: "update", viewModel });
   }
 
-  private onWebviewMessage(message: WebviewMessage): void {
+  private async onWebviewMessage(message: WebviewMessage): Promise<void> {
     if (message.type === "ready") {
       this.sendInit();
     } else if (message.type === "viewModeChanged") {
       void this.context.globalState.update(LAST_VIEW_MODE_KEY, message.viewMode);
+    } else if (message.type === "editValue") {
+      await editDocumentValue(this.document, message.path, message.value);
+    } else if (message.type === "renameKey") {
+      await renameDocumentKey(this.document, message.path, message.newKey);
     }
   }
 

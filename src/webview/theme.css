@@ -506,6 +506,49 @@ button {
   box-sizing: border-box;
 }
 
+/* Inline Editing Styles */
+.inline-edit-input {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: var(--vscode-editor-font-size, 12px);
+  color: var(--vscode-input-foreground, inherit);
+  background: var(--vscode-input-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-focusBorder, #007acc);
+  border-radius: 2px;
+  padding: 1px 4px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.inline-edit-input:focus {
+  border-color: var(--vscode-focusBorder, #007acc);
+  outline: 1px solid var(--vscode-focusBorder, #007acc);
+}
+
+.val-editable {
+  cursor: text;
+  border-radius: 2px;
+  padding: 1px 4px;
+  margin: -1px -4px;
+  transition: background 0.1s ease;
+}
+
+.val-editable:hover {
+  background: var(--vscode-editor-hoverHighlightBackground, rgba(128, 128, 128, 0.15));
+}
+
+.key-editable {
+  cursor: text;
+  border-radius: 2px;
+  padding: 1px 4px;
+  margin: -1px -4px;
+  transition: background 0.1s ease;
+}
+
+.key-editable:hover {
+  background: var(--vscode-editor-hoverHighlightBackground, rgba(128, 128, 128, 0.15));
+}
+
 /* Error banner (App root) */
 .app__error-banner {
   padding: 12px 16px;

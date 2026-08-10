@@ -15,7 +15,8 @@ interface AppProps {
  * The webview's root component. Owns all client-side state (`viewModel`, `viewMode`,
  * `expandedPaths`, Column view's `selectedPath`) and the `window` message listener that receives
  * `HostMessage`s from the extension host. Emits `viewModeChanged` back to the host on every
- * toggle so the next panel opened in this VS Code installation can default to it (R6.2/R6.3).
+ * toggle so the next panel opened in this VS Code installation can default to it, as well as
+ * `editValue` and `renameKey` when the user edits data in any of the views.
  */
 export function App({ postMessage }: AppProps) {
   const [viewModel, setViewModel] = useState<ViewModel>({ status: "ok", root: emptyRoot() });
@@ -63,6 +64,14 @@ export function App({ postMessage }: AppProps) {
     setExpandedPaths(new Set());
   }
 
+  function handleEditValue(path: string[], value: any) {
+    postMessage({ type: "editValue", path, value });
+  }
+
+  function handleRenameKey(path: string[], newKey: string) {
+    postMessage({ type: "renameKey", path, newKey });
+  }
+
   if (viewModel.status === "error") {
     return (
       <div class="app__error-banner">
@@ -103,15 +112,31 @@ export function App({ postMessage }: AppProps) {
       <div class="app__content">
         {viewMode === "tree" && (
           <div class="tree-container">
-            <TreeNode node={viewModel.root} expandedPaths={expandedPaths} onToggle={handleToggle} />
+            <TreeNode
+              node={viewModel.root}
+              expandedPaths={expandedPaths}
+              onToggle={handleToggle}
+              onEditValue={handleEditValue}
+              onRenameKey={handleRenameKey}
+            />
           </div>
         )}
         {viewMode === "column" && (
-          <ColumnView root={viewModel.root} selectedPath={selectedPath} onSelectPath={setSelectedPath} />
+          <ColumnView
+            root={viewModel.root}
+            selectedPath={selectedPath}
+            onSelectPath={setSelectedPath}
+            onEditValue={handleEditValue}
+            onRenameKey={handleRenameKey}
+          />
         )}
         {viewMode === "table" && (
           <div class="table-view-container">
-            <TableView node={viewModel.root} />
+            <TableView
+              node={viewModel.root}
+              onEditValue={handleEditValue}
+              onRenameKey={handleRenameKey}
+            />
           </div>
         )}
       </div>

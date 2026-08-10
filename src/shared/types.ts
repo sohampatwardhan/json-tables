@@ -11,8 +11,7 @@ export type NodeKind = "object" | "array" | "string" | "number" | "boolean" | "n
  * One node in the parsed JSON tree. `path` is the key/index chain from the root, joined into a
  * stable string id (e.g. `"users.0.name"`) — the Tree/Column views use it to key expansion and
  * selection state, so it must stay stable across a live-refresh rebuild as long as the
- * document's shape is unchanged (unlike an array index alone, which would collide across
- * sibling arrays, or a memory address, which wouldn't survive a rebuild at all).
+ * document's shape is unchanged.
  */
 export interface JsonNode {
   kind: NodeKind;
@@ -47,4 +46,6 @@ export type HostMessage =
 /** Messages the webview sends to the extension host. */
 export type WebviewMessage =
   | { type: "ready" }
-  | { type: "viewModeChanged"; viewMode: ViewMode };
+  | { type: "viewModeChanged"; viewMode: ViewMode }
+  | { type: "editValue"; path: string[]; value: any }
+  | { type: "renameKey"; path: string[]; newKey: string };
