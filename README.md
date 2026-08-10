@@ -1,8 +1,7 @@
 # Interactive JSON Explorer
 
-[![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/sohampatwardhan.json-explorer-viewer?style=flat-square&color=blue&label=VS%20Code%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=sohampatwardhan.json-explorer-viewer)
-[![Installs](https://img.shields.io/visual-studio-marketplace/i/sohampatwardhan.json-explorer-viewer?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=sohampatwardhan.json-explorer-viewer)
-[![Rating](https://img.shields.io/visual-studio-marketplace/r/sohampatwardhan.json-explorer-viewer?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=sohampatwardhan.json-explorer-viewer)
+[![Visual Studio Marketplace](https://img.shields.io/badge/Visual_Studio_Marketplace-Install-blue?style=flat-square&logo=visualstudiocode)](https://marketplace.visualstudio.com/items?itemName=sohampatwardhan.json-explorer-viewer)
+[![Version](https://img.shields.io/github/v/tag/sohampatwardhan/json-explorer-vscode?label=version&style=flat-square&color=blue)](https://marketplace.visualstudio.com/items?itemName=sohampatwardhan.json-explorer-viewer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
 Visualize and edit any `.json` or `.jsonc` file with interactive **Tree**, **Column** (macOS Finder-style), or **Table** (Key-Value) views, right beside your VS Code editor.
