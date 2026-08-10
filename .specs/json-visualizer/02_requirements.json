@@ -1,0 +1,350 @@
+{
+  "schema_version": 1,
+  "generated_from": {
+    "file": "02_requirements.md",
+    "sha256": "674bdd6941e1c33fbc6bf1502254545b9211a26ad189948304902e52530f7b6a"
+  },
+  "requirements": [
+    {
+      "id": "1",
+      "user_story": {
+        "role": "developer with a JSON file open",
+        "capability": "a one-click way to visualize it from the editor itself",
+        "benefit": "I don't have to leave VS Code or use an external tool"
+      },
+      "criteria": [
+        {
+          "id": "1.1",
+          "kind": "event",
+          "trigger": "the active editor's language is JSON or JSONC",
+          "actor": "Command_Handler",
+          "behavior": "display a \"Visualize JSON\" control in the editor title area"
+        },
+        {
+          "id": "1.2",
+          "kind": "state",
+          "trigger": "the active editor's language is not JSON or JSONC",
+          "actor": "Command_Handler",
+          "behavior": "keep the \"Visualize JSON\" control hidden"
+        },
+        {
+          "id": "1.3",
+          "kind": "event",
+          "trigger": "a developer activates the \"Visualize JSON\" control",
+          "actor": "Command_Handler",
+          "behavior": "open a visualization panel beside the source editor"
+        },
+        {
+          "id": "1.4",
+          "kind": "unconditional",
+          "trigger": "",
+          "actor": "Command_Handler",
+          "behavior": "open the visualization panel alongside the source editor without replacing it as the default editor for `.json`/`.jsonc` files"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "user_story": {
+        "role": "developer",
+        "capability": "the extension to read the exact contents of my file and tell me clearly if it can't be parsed",
+        "benefit": "the visualization never shows stale or misleading data"
+      },
+      "criteria": [
+        {
+          "id": "2.1",
+          "kind": "event",
+          "trigger": "a visualization panel opens for a document",
+          "actor": "View_Model_Builder",
+          "behavior": "parse the document's current full text into a structured view model"
+        },
+        {
+          "id": "2.2",
+          "kind": "unwanted",
+          "trigger": "the document's text is not valid JSON (or JSONC per its own comment/trailing-comma rules)",
+          "actor": "View_Model_Builder",
+          "behavior": "produce an error view model containing the parse error's message and location, instead of a partial or crashed result"
+        },
+        {
+          "id": "2.3",
+          "kind": "event",
+          "trigger": "the View_Model_Builder produces an error view model",
+          "actor": "Renderer",
+          "behavior": "display the parse error inline in the panel instead of a blank or crashed panel"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "user_story": {
+        "role": "developer",
+        "capability": "to browse the JSON as a collapsible tree",
+        "benefit": "I can drill into nested structures at my own pace"
+      },
+      "criteria": [
+        {
+          "id": "3.1",
+          "kind": "state",
+          "trigger": "the Tree view mode is active",
+          "actor": "Renderer",
+          "behavior": "display each JSON object and array as a collapsible node showing its key/index and child count"
+        },
+        {
+          "id": "3.2",
+          "kind": "state",
+          "trigger": "the Tree view mode is active",
+          "actor": "Renderer",
+          "behavior": "auto-expand every node at nesting depth less than 2"
+        },
+        {
+          "id": "3.3",
+          "kind": "state",
+          "trigger": "the Tree view mode is active",
+          "actor": "Renderer",
+          "behavior": "leave every node at nesting depth 2 or greater collapsed by default"
+        },
+        {
+          "id": "3.4",
+          "kind": "event",
+          "trigger": "a developer clicks a node's chevron",
+          "actor": "Renderer",
+          "behavior": "toggle that node's own expanded/collapsed state without changing any sibling node's state"
+        },
+        {
+          "id": "3.5",
+          "kind": "event",
+          "trigger": "a developer activates the \"expand all\" control",
+          "actor": "Renderer",
+          "behavior": "expand every node in the Tree view"
+        },
+        {
+          "id": "3.6",
+          "kind": "event",
+          "trigger": "a developer activates the \"collapse all\" control",
+          "actor": "Renderer",
+          "behavior": "collapse every node in the Tree view"
+        },
+        {
+          "id": "3.7",
+          "kind": "state",
+          "trigger": "the Tree view mode is active",
+          "actor": "Renderer",
+          "behavior": "color-code null, boolean, number, and string leaf values by type, using the active VS Code color theme's variables"
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "user_story": {
+        "role": "developer",
+        "capability": "a Finder-style drill-down through nested objects and arrays",
+        "benefit": "I can inspect one branch of a large structure without the rest of the tree scrolling out of view"
+      },
+      "criteria": [
+        {
+          "id": "4.1",
+          "kind": "state",
+          "trigger": "the Column view mode is active",
+          "actor": "Renderer",
+          "behavior": "display each level of the currently drilled-down path as its own column of entries"
+        },
+        {
+          "id": "4.2",
+          "kind": "event",
+          "trigger": "a developer selects an object or array entry in a column",
+          "actor": "Renderer",
+          "behavior": "open a new column to its right showing that entry's children"
+        },
+        {
+          "id": "4.3",
+          "kind": "event",
+          "trigger": "a developer selects a scalar entry in a column",
+          "actor": "Renderer",
+          "behavior": "show that value in a detail pane instead of opening a new column"
+        },
+        {
+          "id": "4.4",
+          "kind": "event",
+          "trigger": "a developer drags a column's resize handle",
+          "actor": "Renderer",
+          "behavior": "adjust that column's width accordingly"
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "user_story": {
+        "role": "developer",
+        "capability": "plain objects and arrays of similar objects rendered as tables",
+        "benefit": "I can scan many records or fields at a glance like a spreadsheet"
+      },
+      "criteria": [
+        {
+          "id": "5.1",
+          "kind": "state",
+          "trigger": "the Key-Value/Table view mode is active and the current node is a JSON object",
+          "actor": "Renderer",
+          "behavior": "display its keys and values as rows of a table"
+        },
+        {
+          "id": "5.2",
+          "kind": "state",
+          "trigger": "the Key-Value/Table view mode is active and the current node is an array of objects",
+          "actor": "Renderer",
+          "behavior": "display the array as a grid with one row per array element"
+        },
+        {
+          "id": "5.3",
+          "kind": "state",
+          "trigger": "the Key-Value/Table view mode is active",
+          "actor": "Renderer",
+          "behavior": "show a preview badge indicating type and size for any cell whose value is itself an object or array, rather than the full nested content"
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "user_story": {
+        "role": "developer",
+        "capability": "to switch freely between Tree, Column, and Table",
+        "benefit": "I can pick whichever fits what I'm looking for at the moment"
+      },
+      "criteria": [
+        {
+          "id": "6.1",
+          "kind": "event",
+          "trigger": "a developer selects a different view mode from the panel's toggle",
+          "actor": "Renderer",
+          "behavior": "re-render the same underlying view model in the newly selected mode"
+        },
+        {
+          "id": "6.2",
+          "kind": "event",
+          "trigger": "a developer opens the first visualization panel of a VS Code installation",
+          "actor": "Renderer",
+          "behavior": "default to Tree view mode"
+        },
+        {
+          "id": "6.3",
+          "kind": "event",
+          "trigger": "a developer opens any subsequent visualization panel",
+          "actor": "Renderer",
+          "behavior": "default to the view mode most recently selected in that VS Code installation"
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "user_story": {
+        "role": "developer",
+        "capability": "the visualization to match my VS Code color theme",
+        "benefit": "it looks native rather than clashing with my editor"
+      },
+      "criteria": [
+        {
+          "id": "7.1",
+          "kind": "unconditional",
+          "trigger": "",
+          "actor": "Renderer",
+          "behavior": "style all panel content using VS Code's active color theme's CSS variables"
+        },
+        {
+          "id": "7.2",
+          "kind": "event",
+          "trigger": "the developer switches VS Code's active color theme while a panel is open",
+          "actor": "Renderer",
+          "behavior": "update the panel's colors to match the new theme without the panel being closed and reopened"
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "user_story": {
+        "role": "developer",
+        "capability": "the visualization to stay in sync with the file",
+        "benefit": "I don't have to close and reopen the panel after every edit"
+      },
+      "criteria": [
+        {
+          "id": "8.1",
+          "kind": "event",
+          "trigger": "the visualized document's text changes while its panel is open",
+          "actor": "View_Model_Builder",
+          "behavior": "parse the document's updated full text into a new view model"
+        },
+        {
+          "id": "8.2",
+          "kind": "event",
+          "trigger": "the View_Model_Builder produces a new view model for a document whose panel is open",
+          "actor": "Extension_Host",
+          "behavior": "send that view model to the panel"
+        },
+        {
+          "id": "8.3",
+          "kind": "event",
+          "trigger": "the Renderer receives an updated view model for the document currently shown",
+          "actor": "Renderer",
+          "behavior": "re-render the active view mode with the new data"
+        },
+        {
+          "id": "8.4",
+          "kind": "event",
+          "trigger": "the document associated with an open visualization panel is closed",
+          "actor": "Extension_Host",
+          "behavior": "stop sending further updates for that panel"
+        },
+        {
+          "id": "8.5",
+          "kind": "unwanted",
+          "trigger": "the document's updated text is not valid JSON",
+          "actor": "Renderer",
+          "behavior": "display the parse error inline instead of the previous valid rendering"
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "user_story": {
+        "role": "developer",
+        "capability": "to be certain that browsing the visualization can never change my file",
+        "benefit": "I can use it without worrying about accidental edits"
+      },
+      "criteria": [
+        {
+          "id": "9.1",
+          "kind": "unconditional",
+          "trigger": "",
+          "actor": "Renderer",
+          "behavior": "render every JSON value as non-editable content"
+        },
+        {
+          "id": "9.2",
+          "kind": "unwanted",
+          "trigger": "a developer clicks or otherwise interacts with a value shown in the panel",
+          "actor": "Renderer",
+          "behavior": "leave the visualized document's text unchanged"
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "user_story": null,
+      "criteria": [
+        {
+          "id": "10.1",
+          "kind": "event",
+          "trigger": "the extension is packaged with the standard VS Code packaging tool",
+          "actor": "Package_Build",
+          "behavior": "produce an installable `.vsix` file without requiring a configured Marketplace publisher account"
+        },
+        {
+          "id": "10.2",
+          "kind": "event",
+          "trigger": "the packaged `.vsix` is installed into a VS Code instance",
+          "actor": "Command_Handler",
+          "behavior": "behave identically to running the extension from the Extension Development Host"
+        }
+      ]
+    }
+  ]
+}

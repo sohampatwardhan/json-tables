@@ -1,0 +1,36 @@
+{
+  "change_control": [
+    "None yet."
+  ],
+  "gates": {
+    "audit": {
+      "evidence": "\u2014",
+      "status": "not_run"
+    },
+    "design": {
+      "evidence": "approved 2026-08-09, see [`03_design.md`](03_design.md)",
+      "status": "approved"
+    },
+    "discovery": {
+      "evidence": "approved 2026-08-09, see [`01_discovery.md`](01_discovery.md)",
+      "status": "approved"
+    },
+    "execution": {
+      "evidence": "\u2014",
+      "status": "not_started"
+    },
+    "requirements": {
+      "evidence": "approved 2026-08-09, see [`02_requirements.md`](02_requirements.md)",
+      "status": "approved"
+    },
+    "tasks": {
+      "evidence": "approved 2026-08-09, see [`04_tasks.md`](04_tasks.md)",
+      "status": "approved"
+    }
+  },
+  "generated_from": {
+    "file": "00_state.md",
+    "sha256": "8ee1a2347f3a73cff8d411da45e3399b49eff2a022eb77cfbf528e2c37e7cd7a"
+  },
+  "schema_version": 1
+}

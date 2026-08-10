@@ -1,0 +1,36 @@
+{
+  "diagram": "graph",
+  "target": "block",
+  "columns": 3,
+  "groups": [
+    { "id": "editor_ui", "label": "VS Code Editor" },
+    { "id": "extension_host", "label": "Extension Host" },
+    { "id": "webview_panel", "label": "Webview Panel (Preact)" }
+  ],
+  "nodes": [
+    { "id": "file", "label": "Active .json/.jsonc Document", "kind": "io", "group": "editor_ui" },
+    { "id": "titleButton", "label": "Editor Title: Visualize JSON", "kind": "process", "group": "editor_ui" },
+    { "id": "commandHandler", "label": "Command Handler", "kind": "process", "group": "extension_host" },
+    { "id": "viewModelBuilder", "label": "View Model Builder (jsonc-parser)", "kind": "process", "group": "extension_host" },
+    { "id": "panelController", "label": "Webview Panel Controller", "kind": "process", "group": "extension_host" },
+    { "id": "documentWatcher", "label": "Document Change Watcher", "kind": "process", "group": "extension_host" },
+    { "id": "globalState", "label": "Last View Mode", "kind": "store", "group": "extension_host" },
+    { "id": "appRoot", "label": "App Root", "kind": "process", "group": "webview_panel" },
+    { "id": "treeView", "label": "Tree View", "kind": "process", "group": "webview_panel" },
+    { "id": "columnView", "label": "Column View", "kind": "process", "group": "webview_panel" },
+    { "id": "tableView", "label": "Key-Value/Table View", "kind": "process", "group": "webview_panel" }
+  ],
+  "edges": [
+    { "from": "file", "to": "commandHandler", "label": "read text on open" },
+    { "from": "titleButton", "to": "commandHandler", "label": "click" },
+    { "from": "commandHandler", "to": "panelController", "label": "create/reveal panel" },
+    { "from": "panelController", "to": "viewModelBuilder", "label": "parse text" },
+    { "from": "viewModelBuilder", "to": "panelController", "label": "view model" },
+    { "from": "documentWatcher", "to": "viewModelBuilder", "label": "on text change" },
+    { "from": "panelController", "to": "globalState", "label": "read/write lastViewMode" },
+    { "from": "panelController", "to": "appRoot", "label": "postMessage init/update" },
+    { "from": "appRoot", "to": "treeView", "label": "render (Tree mode)" },
+    { "from": "appRoot", "to": "columnView", "label": "render (Column mode)" },
+    { "from": "appRoot", "to": "tableView", "label": "render (Table mode)" }
+  ]
+}

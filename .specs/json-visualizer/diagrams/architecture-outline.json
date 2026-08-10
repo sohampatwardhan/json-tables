@@ -1,0 +1,25 @@
+{
+  "diagram": "graph",
+  "target": "block",
+  "columns": 3,
+  "groups": [
+    { "id": "editor_ui", "label": "VS Code Editor" },
+    { "id": "extension_host", "label": "Extension Host" },
+    { "id": "webview_panel", "label": "Webview Panel" }
+  ],
+  "nodes": [
+    { "id": "file", "label": "Active .json/.jsonc File", "kind": "io", "group": "editor_ui" },
+    { "id": "button", "label": "Editor Title: Visualize JSON", "kind": "process", "group": "editor_ui" },
+    { "id": "command", "label": "Command Handler", "kind": "process", "group": "extension_host" },
+    { "id": "parser", "label": "Parse + Build View Model", "kind": "process", "group": "extension_host" },
+    { "id": "panel", "label": "Webview Panel Controller", "kind": "process", "group": "extension_host" },
+    { "id": "renderer", "label": "Tree / Column / Table Renderer", "kind": "process", "group": "webview_panel" }
+  ],
+  "edges": [
+    { "from": "file", "to": "command", "label": "open or edit" },
+    { "from": "button", "to": "command", "label": "click" },
+    { "from": "command", "to": "parser", "label": "raw text" },
+    { "from": "parser", "to": "panel", "label": "view model" },
+    { "from": "panel", "to": "renderer", "label": "postMessage: render/update" }
+  ]
+}

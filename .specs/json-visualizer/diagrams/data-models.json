@@ -1,0 +1,37 @@
+{
+  "diagram": "graph",
+  "target": "classDiagram",
+  "nodes": [
+    { "id": "JsonNode", "members": [
+      "+kind: NodeKind",
+      "+key: string?",
+      "+index: number?",
+      "+value: string | number | boolean | null",
+      "+children: JsonNode[]?",
+      "+path: string[]"
+    ] },
+    { "id": "ViewModel", "members": [
+      "+status: \"ok\" | \"error\"",
+      "+root: JsonNode?",
+      "+message: string?",
+      "+line: number?",
+      "+column: number?"
+    ] },
+    { "id": "HostMessage", "members": [
+      "+type: \"init\" | \"update\"",
+      "+viewModel: ViewModel",
+      "+viewMode: ViewMode?"
+    ] },
+    { "id": "WebviewMessage", "members": [
+      "+type: \"ready\" | \"viewModeChanged\"",
+      "+viewMode: ViewMode?"
+    ] },
+    { "id": "ViewMode", "kind": "enumeration", "members": ["Tree", "Column", "Table"] }
+  ],
+  "edges": [
+    { "from": "ViewModel", "to": "JsonNode", "kind": "composition", "label": "root" },
+    { "from": "HostMessage", "to": "ViewModel", "kind": "association", "label": "carries" },
+    { "from": "HostMessage", "to": "ViewMode", "kind": "association", "label": "carries" },
+    { "from": "WebviewMessage", "to": "ViewMode", "kind": "association", "label": "reports" }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "diagram": "sequence",
+  "target": "sequenceDiagram",
+  "actors": [
+    { "id": "User" },
+    { "id": "CommandHandler" },
+    { "id": "ViewModelBuilder" },
+    { "id": "PanelController" },
+    { "id": "DocumentWatcher" },
+    { "id": "GlobalState" },
+    { "id": "Webview" }
+  ],
+  "steps": [
+    { "type": "message", "from": "User", "to": "CommandHandler", "label": "click \"Visualize JSON\"", "kind": "sync" },
+    { "type": "message", "from": "CommandHandler", "to": "PanelController", "label": "createOrReveal(document)", "kind": "sync" },
+    { "type": "message", "from": "PanelController", "to": "ViewModelBuilder", "label": "parse(text)", "kind": "sync" },
+    { "type": "message", "from": "ViewModelBuilder", "to": "PanelController", "label": "viewModel", "kind": "reply" },
+    { "type": "message", "from": "PanelController", "to": "GlobalState", "label": "get lastViewMode", "kind": "sync" },
+    { "type": "message", "from": "GlobalState", "to": "PanelController", "label": "viewMode", "kind": "reply" },
+    { "type": "message", "from": "PanelController", "to": "Webview", "label": "postMessage(init, viewModel, viewMode)", "kind": "sync" },
+    { "type": "note", "position": "over", "actors": ["Webview"], "text": "renders the selected view mode" },
+    { "type": "opt", "label": "document edited while panel is open", "steps": [
+      { "type": "message", "from": "DocumentWatcher", "to": "ViewModelBuilder", "label": "parse(updatedText)", "kind": "sync" },
+      { "type": "message", "from": "ViewModelBuilder", "to": "PanelController", "label": "viewModel", "kind": "reply" },
+      { "type": "message", "from": "PanelController", "to": "Webview", "label": "postMessage(update, viewModel)", "kind": "sync" },
+      { "type": "note", "position": "over", "actors": ["Webview"], "text": "re-renders the active mode with new data" }
+    ] },
+    { "type": "opt", "label": "developer switches view mode", "steps": [
+      { "type": "message", "from": "User", "to": "Webview", "label": "select view mode", "kind": "sync" },
+      { "type": "note", "position": "over", "actors": ["Webview"], "text": "re-renders locally in the new mode" },
+      { "type": "message", "from": "Webview", "to": "PanelController", "label": "postMessage(viewModeChanged)", "kind": "sync" },
+      { "type": "message", "from": "PanelController", "to": "GlobalState", "label": "set lastViewMode", "kind": "sync" }
+    ] }
+  ]
+}
