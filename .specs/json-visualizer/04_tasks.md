@@ -349,12 +349,19 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Delegation:** parallel-safe
     - _Requirements: 3.7, 7.1, 7.2_
 
-- [ ] 4. Orchestration
-  - [ ] 4.1 Implement the Webview Panel Controller
-    - Create `src/panelController.ts` exporting `class PanelController` (module-level `Map<string,
+- [x] 4. Orchestration
+  - [x] 4.1 Implement the Webview Panel Controller
+    - Create [`src/debounce.ts`](../../src/debounce.ts) (`debounce(fn, ms)`) and [`src/webviewHtml.ts`](../../src/webviewHtml.ts)
+      (`generateNonce()`, `renderWebviewHtml({ scriptUri, styleUri, nonce })`) as dependency-free
+      sibling files — same reason as task 2.2's `WorkspaceEvents` parameter: any file importing
+      `vscode` as a value fails to resolve under a plain Node.js test process, so the pieces
+      worth unit-testing (debounce timing, CSP shape) have to live where that import never
+      happens.
+    - Create [`src/panelController.ts`](../../src/panelController.ts) exporting `class PanelController` (module-level `Map<string,
       PanelController>` keyed by `document.uri.toString()`):
       `static createOrReveal(context, document)`, `private sendInit()`, `private
-      onDocumentChanged()` (150 ms debounce), `private onWebviewMessage(message)`, `dispose()`.
+      onDocumentChanged()` (calls the 150 ms `debounce` wrapper from `debounce.ts`), `private
+      onWebviewMessage(message)`, `dispose()`.
     - `createOrReveal` creates the panel in `vscode.ViewColumn.Beside` with `enableScripts: true`,
       `retainContextWhenHidden: true`, `localResourceRoots: [Uri.joinPath(context.extensionUri,
       "dist", "webview")]`, and HTML with a nonce-based CSP (`default-src 'none'; script-src
@@ -376,7 +383,7 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       `context.globalState.update("jsonTables.lastViewMode", viewMode)`.
     - `dispose()` — called from the panel's own `onDidDispose` and from `watchDocument`'s
       `onClose` — disposes the watcher subscription and removes the map entry.
-    - **Files:** `src/panelController.ts`
+    - **Files:** [`src/panelController.ts`](../../src/panelController.ts), [`src/debounce.ts`](../../src/debounce.ts), [`src/webviewHtml.ts`](../../src/webviewHtml.ts), [`src/panelController.test.ts`](../../src/panelController.test.ts)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 3.1, 2.2
@@ -386,30 +393,39 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
       `PanelController.createOrReveal(context, document): void`, consumed by task 5.1
     - **Documentation:** doc comments on the class and each public method stating the lifecycle
       contract (one instance per document, disposal ordering, why the panel is never in
-      `ViewColumn.Active`)
-    - **Verification:** unit test for the 150 ms debounce using fake timers (one `buildViewModel`
-      call per burst, not per keystroke); manual Extension Development Host check that a second
-      invocation on the same document reveals rather than duplicates the panel, and that the
-      CSP header is present in the rendered HTML
+      `ViewColumn.Active`); doc comments on `debounce`/`generateNonce`/`renderWebviewHtml`
+      explaining why they're dependency-free siblings rather than inline in `panelController.ts`
+    - **Verification:** unit tests (`debounce` via `node:test`'s `mock.timers` — one trailing
+      call per burst, a fresh call after settling fires again; `renderWebviewHtml` — the CSP
+      meta tag's nonce matches the `<script>`/`<link>` tags' nonces, `default-src 'none'` is
+      present, URIs are embedded verbatim) — 4 tests, all passing; `npx tsc --noEmit` and
+      `npm run compile` both exit 0. Manual Extension Development Host check (deferred to task
+      6.2's walkthrough, no GUI in this environment): a second invocation on the same document
+      reveals rather than duplicates the panel.
     - **Estimated effort:** 3-4 hours
     - **Risk:** high; central orchestration module, and CSP correctness is a security property
     - **Task category:** heavy_reasoning
     - **Delegation:** parallel-safe
     - _Requirements: 1.3, 1.4, 2.1, 6.2, 6.3, 8.1, 8.2, 8.4_
 
-  - [ ] 4.2 Implement the App root component
-    - Create `src/webview/App.tsx` exporting `App`: holds `viewModel: ViewModel`, `viewMode:
-      ViewMode`, and `expandedPaths: Set<string>` in `useState`.
+  - [x] 4.2 Implement the App root component
+    - Create [`src/webview/App.tsx`](../../src/webview/App.tsx) exporting `App({ postMessage })`: holds `viewModel:
+      ViewModel`, `viewMode: ViewMode`, `expandedPaths: Set<string>`, and Column view's
+      `selectedPath: string[]` in `useState`. `postMessage` is injected by task 5.2's `main.tsx`
+      (wrapping `acquireVsCodeApi().postMessage`) rather than called directly, so this component
+      stays unit-testable with a fake — `acquireVsCodeApi` only exists in a real webview.
     - Renders an inline error banner (message + line/column) when `viewModel.status === "error"`,
       in place of the selected view.
     - Otherwise renders the Tree/Column/Table toggle plus the matching component from 3.2/3.3/3.4,
       passing `expandedPaths` and toggle callbacks down to `TreeView`.
-    - Expand-all/collapse-all buttons fill or clear `expandedPaths` with every object/array path
-      in the current tree.
-    - Listens for `window.addEventListener("message", ...)` dispatching incoming `HostMessage`s
-      (`init`/`update`) into state; posts `{ type: "viewModeChanged", viewMode }` when the toggle
+    - Expand-all/collapse-all buttons fill or clear `expandedPaths` using `TreeView.tsx`'s
+      exported `collectExpandablePaths`.
+    - Owns its own `window.addEventListener("message", ...)` (via `useEffect`) dispatching
+      incoming `HostMessage`s (`init`/`update`) into state — this half doesn't need injection
+      since a jsdom test can dispatch a real `MessageEvent` directly; posts
+      `{ type: "viewModeChanged", viewMode }` via the injected `postMessage` when the toggle
       changes.
-    - **Files:** `src/webview/App.tsx`
+    - **Files:** [`src/webview/App.tsx`](../../src/webview/App.tsx), [`src/webview/App.test.tsx`](../../src/webview/App.test.tsx)
     - **Dependency resolution:** none
     - **Dependency delivery:** none
     - **Depends on:** 3.2, 3.3, 3.4, 3.5
@@ -420,9 +436,11 @@ All of Stage 3 is one parallel wave (five tasks depending only on Stage 2's shar
     - **Documentation:** doc comment on `App` stating the message-handling contract (which
       incoming `type`s it accepts, which outgoing `type`s it emits)
     - **Verification:** component test (`@testing-library/preact` + `jsdom`) covering: error-state
-      renders the inline banner and no view; simulated `init`/`update` `window.postMessage` events
-      update `viewModel`; simulated toggle clicks re-render without re-requesting data;
-      expand-all/collapse-all clicks mutate the full `expandedPaths` set
+      renders the inline banner and no view; dispatched `init`/`update` `MessageEvent`s update
+      `viewModel` (an `update` after `init` changes what renders, view mode unchanged); a toggle
+      click switches the rendered view locally and calls the injected `postMessage` exactly once
+      with `{ type: "viewModeChanged", viewMode }`; expand-all/collapse-all clicks change the
+      rendered `.tree-node__children` count — 5 tests, all passing
     - **Estimated effort:** 2-3 hours
     - **Risk:** medium; composes every other webview component and owns all client-side state
     - **Task category:** code_analysis

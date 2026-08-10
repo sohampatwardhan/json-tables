@@ -49,6 +49,8 @@
 | run-20260810T034356Z | Stage 3 | 3.4 | 1 | 2026-08-10T04:27:06Z | 2026-08-10T04:28:27Z | 81 | verified |
 | run-20260810T034356Z | Stage 3 | 3.5 | 1 | 2026-08-10T04:28:27Z | unknown | unknown | interrupted |
 | run-20260810T124656Z | Stage 3 | 3.5 | 2 | 2026-08-10T12:46:56Z | 2026-08-10T12:47:29Z | 33 | verified |
+| run-20260810T124656Z | Stage 4 | 4.1 | 1 | 2026-08-10T12:53:16Z | 2026-08-10T12:56:52Z | 216 | verified |
+| run-20260810T124656Z | Stage 4 | 4.2 | 1 | 2026-08-10T12:57:21Z | 2026-08-10T12:59:53Z | 152 | verified |
 
 ### Execution Gantt
 
@@ -67,6 +69,9 @@ gantt
     3.3 attempt 1 (verified, 61s) :done, b_3_3_attempt1, 2026-08-10T04:25:25, 2026-08-10T04:26:26
     3.4 attempt 1 (verified, 81s) :done, b_3_4_attempt1, 2026-08-10T04:27:06, 2026-08-10T04:28:27
     3.5 attempt 2 (verified, 33s) :done, b_3_5_attempt2, 2026-08-10T12:46:56, 2026-08-10T12:47:29
+    section Stage 4
+    4.1 attempt 1 (verified, 216s) :done, b_4_1_attempt1, 2026-08-10T12:53:16, 2026-08-10T12:56:52
+    4.2 attempt 1 (verified, 152s) :done, b_4_2_attempt1, 2026-08-10T12:57:21, 2026-08-10T12:59:53
 ```
 
 Run `run-20260810T034356Z` and task 3.5's first attempt were left open across a session pause

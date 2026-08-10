@@ -94,7 +94,20 @@ wiring.
   dependency.
 - Pure function, no VS Code API dependency — directly unit-testable (see Testing Strategy).
 
-### `panelController.ts`
+### `panelController.ts`, `debounce.ts`, `webviewHtml.ts`
+
+The debounce wrapper and the HTML/CSP template are factored into their own dependency-free
+sibling files rather than defined inside `panelController.ts` itself — the same reason
+`documentWatcher.ts` takes `vscode.workspace` as a parameter rather than importing `vscode` as a
+value: any file that does `import * as vscode from "vscode"` at module scope fails to resolve
+under a plain Node.js test process, so the pieces worth unit-testing (timing behavior, CSP shape)
+have to live where that import never happens.
+
+- `debounce.ts`: `debounce<Args>(fn, ms): (...args: Args) => void` — the standard trailing-edge
+  debounce, generic over its wrapped function's arguments.
+- `webviewHtml.ts`: `generateNonce(): string` and `renderWebviewHtml({ scriptUri, styleUri,
+  nonce }): string`, producing the CSP `default-src 'none'; script-src 'nonce-<nonce>';
+  style-src 'nonce-<nonce>'` shell with both the nonce'd `<script>` and `<link>` tags.
 
 - `class PanelController` — one instance per visualized `vscode.TextDocument`, keyed by
   `document.uri.toString()` in a module-level `Map` so a second invocation on the same document
@@ -136,13 +149,23 @@ wiring.
 
 ### Webview: `App.tsx`
 
-- Holds `viewModel: ViewModel` and `viewMode: ViewMode` in `useState`. Renders:
+- `App({ postMessage })`, where `postMessage: (message: WebviewMessage) => void` is injected by
+  `main.tsx` (wrapping the real `acquireVsCodeApi().postMessage`) rather than called directly —
+  `acquireVsCodeApi` only exists inside a real webview, so injecting it as a prop is what keeps
+  `App` unit-testable with a fake, the same dependency-injection reasoning already applied to
+  `documentWatcher.ts` and `panelController.ts`'s extracted helpers. `App` owns its own
+  `window.addEventListener("message", ...)` internally via a `useEffect` — unlike
+  `acquireVsCodeApi`, `window`'s message event can be simulated directly in a jsdom test by
+  dispatching a real `MessageEvent`, so no injection is needed for the receiving half.
+- Holds `viewModel: ViewModel`, `viewMode: ViewMode`, `expandedPaths: Set<string>`, and Column
+  view's `selectedPath: string[]` in `useState`. Renders:
   - an inline error banner when `viewModel.status === "error"` (**R2.3, R8.5**), instead of the
     selected view;
   - otherwise, a view-mode toggle (`Tree` / `Column` / `Table`) plus the matching renderer
     component, passing `viewModel.root` and a shared `expandedPaths: Set<string>` down to
     `TreeView` so the toggle and any global expand/collapse-all control operate at the `App`
-    level rather than being duplicated per node (**R3.4, R3.5, R3.6, R6.1**).
+    level rather than being duplicated per node (**R3.4, R3.5, R3.6, R6.1**). Expand-all/
+    collapse-all call `TreeView.ts`'s exported `collectExpandablePaths`/`defaultExpandedPaths`.
   - On toggle change, posts `{ type: "viewModeChanged", viewMode }` back to the host (**R6.3**).
 
 ### Webview: `TreeView.tsx`

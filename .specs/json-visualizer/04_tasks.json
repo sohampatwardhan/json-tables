@@ -1,22 +1,22 @@
 {
   "concurrency": {
-    "active_stage": 4,
+    "active_stage": 5,
     "blocked": {},
     "parallel_candidates": [
-      "4.1",
-      "4.2"
+      "5.1",
+      "5.2"
     ],
     "ready": [
-      "4.1",
-      "4.2"
+      "5.1",
+      "5.2"
     ],
     "serial_candidates": [],
     "waves": [
       {
         "mode": "parallel",
         "tasks": [
-          "4.1",
-          "4.2"
+          "5.1",
+          "5.2"
         ],
         "wave": 1
       }
@@ -24,7 +24,7 @@
   },
   "generated_from": {
     "file": "04_tasks.md",
-    "sha256": "a1ebd9131d929ede96d152fc0c7b47a336783a1b7102c65de73d64c3a7b3d6ba"
+    "sha256": "0fd00d420bb4b3d90a06cd21d12dbb0418aafa65b19e5f538b83fa495589ced2"
   },
   "requirement_count": 35,
   "schema_version": 1,
@@ -289,7 +289,7 @@
     },
     {
       "capability_tier": "frontier",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -298,7 +298,10 @@
         "2.2"
       ],
       "files": [
-        "src/panelController.ts"
+        "src/panelController.ts",
+        "src/debounce.ts",
+        "src/webviewHtml.ts",
+        "src/panelController.test.ts"
       ],
       "id": "4.1",
       "interfaces": "Consumes: `buildViewModel(text): ViewModel` from 3.1, `watchDocument(...)` from 2.2, `HostMessage`/`WebviewMessage` types from 2.1; Produces: `PanelController.createOrReveal(context, document): void`, consumed by task 5.1",
@@ -319,11 +322,11 @@
       "stage": 4,
       "task_category": "heavy_reasoning",
       "title": "Implement the Webview Panel Controller",
-      "verification": "unit test for the 150 ms debounce using fake timers (one `buildViewModel` call per burst, not per keystroke); manual Extension Development Host check that a second invocation on the same document reveals rather than duplicates the panel, and that the CSP header is present in the rendered HTML"
+      "verification": "unit tests (`debounce` via `node:test`'s `mock.timers` \u2014 one trailing call per burst, a fresh call after settling fires again; `renderWebviewHtml` \u2014 the CSP meta tag's nonce matches the `<script>`/`<link>` tags' nonces, `default-src 'none'` is present, URIs are embedded verbatim) \u2014 4 tests, all passing; `npx tsc --noEmit` and `npm run compile` both exit 0. Manual Extension Development Host check (deferred to task 6.2's walkthrough, no GUI in this environment): a second invocation on the same document reveals rather than duplicates the panel."
     },
     {
       "capability_tier": "frontier",
-      "checked": false,
+      "checked": true,
       "delegation": "parallel-safe",
       "dependency_delivery": "none",
       "dependency_resolution": "none",
@@ -334,7 +337,8 @@
         "3.5"
       ],
       "files": [
-        "src/webview/App.tsx"
+        "src/webview/App.tsx",
+        "src/webview/App.test.tsx"
       ],
       "id": "4.2",
       "interfaces": "Consumes: `TreeNode`/`ColumnView`/`KeyValueTable`/`ArrayGrid` components from 3.2-3.4, `theme.css` from 3.5, `HostMessage`/`WebviewMessage`/`ViewModel`/`ViewMode` types from 2.1; Produces: `App` component, mounted by task 5.2's `main.tsx`",
@@ -355,7 +359,7 @@
       "stage": 4,
       "task_category": "code_analysis",
       "title": "Implement the App root component",
-      "verification": "component test (`@testing-library/preact` + `jsdom`) covering: error-state renders the inline banner and no view; simulated `init`/`update` `window.postMessage` events update `viewModel`; simulated toggle clicks re-render without re-requesting data; expand-all/collapse-all clicks mutate the full `expandedPaths` set"
+      "verification": "component test (`@testing-library/preact` + `jsdom`) covering: error-state renders the inline banner and no view; dispatched `init`/`update` `MessageEvent`s update `viewModel` (an `update` after `init` changes what renders, view mode unchanged); a toggle click switches the rendered view locally and calls the injected `postMessage` exactly once with `{ type: \"viewModeChanged\", viewMode }`; expand-all/collapse-all clicks change the rendered `.tree-node__children` count \u2014 5 tests, all passing"
     },
     {
       "capability_tier": "economical",
